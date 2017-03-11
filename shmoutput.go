@@ -82,10 +82,9 @@ func (m *SHMOutput) Render(l []color.RGBA) {
 		if i > n {
 			break
 		}
-
-		map_array[i+0] = byte(p.R)
-		map_array[i+1] = byte(p.G)
-		map_array[i+2] = byte(p.B)
-		map_array[i+3] = byte(0)
+		map_array[i*4+0] = byte(0)
+		map_array[i*4+1] = byte(p.G)
+		map_array[i*4+2] = byte(p.R)
+		map_array[i*4+3] = byte(p.B)
 	}
 }
