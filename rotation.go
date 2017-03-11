@@ -4,7 +4,6 @@ import (
 	"time"
 	"image/color"
 	"sync"
-	"log"
 )
 
 type Rotation struct {
@@ -33,6 +32,11 @@ func rotateLEDs(leds []color.RGBA, k int)  {
 }
 
 func (r *Rotation) Render(stripe *LEDStripe) {
+
+	if r.StepsPerSecond == 0 {
+		return
+	}
+
 	if r.LastFrameTime.Equal(time.Time{}) {
 		r.LastFrameTime = time.Now()
 	} else {

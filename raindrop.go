@@ -5,6 +5,7 @@ import (
 	"github.com/lucasb-eyer/go-colorful"
 	"image/color"
 	"sync"
+	"time"
 )
 
 type Raindrop struct {
@@ -23,6 +24,8 @@ type Raindrop struct {
 
 	DecayLow float64 `mqtt:"decay_low"`
 	DecayHigh float64 `mqtt:"decay_high"`
+
+	rand *rand.Rand
 
 	leds []RaindropLED
 }
@@ -48,11 +51,11 @@ func minFloat64(a, b float64) float64 {
 	}
 }
 
-func randomFloat64(min, max float64) float64 {
+func randomFloat64(ra *rand.Rand, min, max float64) float64 {
 
 	diff := max - min
 
-	return (rand.Float64() * diff) + min
+	return (ra.Float64() * diff) + min
 }
 
 func (r *RaindropLED) Decay() {
@@ -65,11 +68,11 @@ func (r *RaindropLED) Decay() {
 
 func (r *Raindrop) HitLED(led *RaindropLED) {
 	//log.Println("hit")
-	saturation := randomFloat64(r.SaturationMin, r.SaturationMax)
-	hue := randomFloat64(r.HueMin, r.HueMax)
-	value := randomFloat64(r.ValueMin, r.ValueMax)
+	saturation := randomFloat64(r.rand, r.SaturationMin, r.SaturationMax)
+	hue := randomFloat64(r.rand, r.HueMin, r.HueMax)
+	value := randomFloat64(r.rand, r.ValueMin, r.ValueMax)
 
-	decayRate := randomFloat64(r.DecayLow, r.DecayHigh)
+	decayRate := randomFloat64(r.rand, r.DecayLow, r.DecayHigh)
 
 	//log.Printf("H: %v S: %v V: %v, R: %v", hue, saturation, value, decayRate)
 	led.Color = colorful.Hsv(hue, saturation, value)
@@ -91,6 +94,8 @@ func NewRaindrop() Operation {
 
 		DecayLow: 0.001,
 		DecayHigh: 0.5,
+
+		rand: rand.New(rand.NewSource(time.Now().Unix())),
 	}
 }
 
@@ -103,7 +108,7 @@ func (r *Raindrop) Render(stripe *LEDStripe) {
 	}
 
 	for i := range stripe.LEDS {
-		roll := randomFloat64(0.0, 1.0)
+		roll := randomFloat64(r.rand,0.0, 1.0)
 
 		l := &r.leds[i]
 		if roll > r.Chance {
