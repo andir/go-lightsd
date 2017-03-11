@@ -79,7 +79,9 @@ func NewMqttConnection(broker string, clientId string, pipeline core.Pipeline) {
 				log.Fatalf("Unsupported type: %v", k)
 			}
 
-			client.Subscribe(topic, 0, func(c MQTT.Client, m MQTT.Message) {
+			if t := client.Subscribe(topic, 0, func(c MQTT.Client, m MQTT.Message) {
+				log.Printf("MSG: %v", m)
+
 				val, err := parse(string(m.Payload()))
 				if err != nil {
 					log.Printf("Failed to parse: %s: %v", m.Payload(), err)
@@ -90,7 +92,9 @@ func NewMqttConnection(broker string, clientId string, pipeline core.Pipeline) {
 				op.Lock()
 				defer op.Unlock()
 				fieldValue.Set(val)
-			})
+			}); t.Wait() && t.Error() != nil {
+				log.Fatal(t.Error())
+			}
 
 			log.Printf("Found MQTT exported parameter: %s:%s(%s) as %s", t.Name(), fieldType.Name, fieldType.Type.Name(), topic)
 		}
