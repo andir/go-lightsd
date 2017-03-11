@@ -29,20 +29,6 @@ type LEDRGB struct {
     B uint8
 }
 
-func (s *LEDStripe) Render() []LEDRGB {
-    output := make([]LEDRGB, len(s.LEDS))
-
-    for i, l := range s.LEDS {
-        output[i] = LEDRGB{
-            R: l.R,
-            G: l.G,
-            B: l.B,
-        }
-    }
-
-    return output
-}
-
 func CreateStreamHandler(broadcaster *WebsocketBroadcaster) websocket.Handler {
     return func(ws *websocket.Conn) {
         broadcaster.Add(ws)
@@ -82,7 +68,7 @@ func (b *WebsocketBroadcaster) Remove(ws *websocket.Conn) {
     }
 }
 
-func (b *WebsocketBroadcaster) Broadcast(l []LEDRGB) {
+func (b *WebsocketBroadcaster) Broadcast(l []color.RGBA) {
     msg := make([]byte, len(l)*3)
 
     for i, p := range l {
@@ -110,7 +96,7 @@ func main() {
     pipeline := map[string]Operation{
         //"rainbow":   NewRainbow(),
         "raindrops": NewRaindrop(),
-        "rotation":  NewRotation(60.0),
+        //"rotation":  NewRotation(60.0),
     }
 
     NewMqttConnection(*broker, *id, pipeline)
@@ -135,12 +121,10 @@ func main() {
             pipeline[i].Render(stripe)
         }
 
-        l := stripe.Render()
-
         elapsed := time.Now().Sub(s)
 
-        sink.Render(l)
-        bc.Broadcast(l)
+        sink.Render(stripe.LEDS)
+        bc.Broadcast(stripe.LEDS)
         interval := time.Second / time.Duration(fps)
 
         diff := interval - elapsed

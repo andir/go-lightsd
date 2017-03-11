@@ -7,6 +7,7 @@ import (
 	"syscall"
 	"runtime"
 	"github.com/fabiokung/shm"
+	"image/color"
 )
 
 type SHMOutput struct {
@@ -73,7 +74,7 @@ func minInt(a, b int) int {
 	}
 }
 
-func (m *SHMOutput) Render(l []LEDRGB) {
+func (m *SHMOutput) Render(l []color.RGBA) {
 	map_array := (*[1<<30]uint8)(unsafe.Pointer(&m.mmap[0]))[:m.size:m.size]
 	n := minInt(len(l), m.size)
 
