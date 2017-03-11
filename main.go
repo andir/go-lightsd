@@ -137,8 +137,6 @@ func main() {
 
         l := stripe.Render()
 
-        log.Printf("Frame: %v", len(l))
-
         elapsed := time.Now().Sub(s)
 
         sink.Render(l)

@@ -33,8 +33,6 @@ func rotateLEDs(leds []color.RGBA, k int)  {
 }
 
 func (r *Rotation) Render(stripe *LEDStripe) {
-	log.Printf("sps: %v", r.StepsPerSecond)
-
 	if r.LastFrameTime.Equal(time.Time{}) {
 		r.LastFrameTime = time.Now()
 	} else {
