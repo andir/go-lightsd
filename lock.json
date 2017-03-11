@@ -1,5 +1,5 @@
 {
-    "memo": "54ea5a59f0b9d232dd871e47477dfde599dc7feed304a2191effd8424ba4728b",
+    "memo": "dce458484ef2499a5b241e1448a0864731a003a63d521d958219415619d96ba4",
     "projects": [
         {
             "name": "github.com/eclipse/paho.mqtt.golang",
@@ -8,6 +8,14 @@
             "packages": [
                 ".",
                 "packets"
+            ]
+        },
+        {
+            "name": "github.com/fabiokung/shm",
+            "branch": "master",
+            "revision": "2852b0d79bae144a3e2f0f927b195024c83afc7c",
+            "packages": [
+                "."
             ]
         },
         {

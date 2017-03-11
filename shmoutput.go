@@ -33,7 +33,7 @@ func destroySHMOutput(s *SHMOutput) {
 
 func NewSHMOutput(filename string, size int) *SHMOutput {
 
-	size *= 3
+	size *= 4
 
 	map_file, err := shm.Open(filename, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
 
@@ -85,5 +85,6 @@ func (m *SHMOutput) Render(l []LEDRGB) {
 		map_array[i+0] = byte(p.R)
 		map_array[i+1] = byte(p.G)
 		map_array[i+2] = byte(p.B)
+		map_array[i+3] = byte(0)
 	}
 }
