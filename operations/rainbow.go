@@ -1,8 +1,9 @@
-package main
+package operations
 
 import (
 	"github.com/lucasb-eyer/go-colorful"
 	"sync"
+	"../core"
 )
 
 
@@ -15,7 +16,7 @@ type Rainbow struct {
 }
 
 
-func NewRainbow(name string) Operation {
+func NewRainbow(name string) core.Operation {
 	keypoints := &GradientTable{
 		//{MustParseHex("#9e0142"), 0.0},
 		//{MustParseHex("#d53e4f"), 0.1},
@@ -94,7 +95,7 @@ func (r *Rainbow) Name() string {
 	return r.name
 }
 
-func (r *Rainbow) Render(stripe LEDStripe) LEDStripe {
+func (r *Rainbow) Render(stripe core.LEDStripe) core.LEDStripe {
 	r.RLock()
 	defer r.RUnlock()
 	l := len(stripe)

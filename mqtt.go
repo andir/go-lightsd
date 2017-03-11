@@ -6,10 +6,11 @@ import (
 	"log"
 	"fmt"
 	"strconv"
+	"./core"
 )
 
 
-func NewMqttConnection(broker string, clientId string, pipeline Pipeline) {
+func NewMqttConnection(broker string, clientId string, pipeline core.Pipeline) {
 
 	opts := MQTT.NewClientOptions()
 	opts.AddBroker(broker)

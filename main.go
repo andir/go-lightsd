@@ -9,6 +9,8 @@ import (
     "sync"
     "fmt"
     "flag"
+    "./core"
+    "./operations"
 )
 
 func CreateStreamHandler(broadcaster *WebsocketBroadcaster) websocket.Handler {
@@ -73,10 +75,10 @@ func main() {
     count := 1000
     fps := 60
 
-    pipeline := []Operation{
-        NewRainbow("rainbow"),
-        //NewRaindrop("raindrops"),
-        NewRotation("rotation", 50.0),
+    pipeline := []core.Operation{
+        operations.NewRainbow("rainbow"),
+        //operations.NewRaindrop("raindrops"),
+        operations.NewRotation("rotation", 50.0),
     }
 
     NewMqttConnection(*broker, *id, pipeline)
@@ -94,7 +96,7 @@ func main() {
 
     sink := NewSHMOutput("/test", count)
 
-    stripe := NewLEDStripe(count)
+    stripe := core.NewLEDStripe(count)
 
     for {
         s := time.Now()

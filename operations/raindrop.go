@@ -1,10 +1,11 @@
-package main
+package operations
 
 import (
 	"math/rand"
 	"github.com/lucasb-eyer/go-colorful"
 	"image/color"
 	"sync"
+	"../core"
 	"time"
 )
 
@@ -81,7 +82,7 @@ func (r *Raindrop) HitLED(led *RaindropLED) {
 	led.DecayRate = 1.0 - decayRate
 }
 
-func NewRaindrop(name string) Operation {
+func NewRaindrop(name string) core.Operation {
 	return &Raindrop{
 		name: name,
 
@@ -107,7 +108,7 @@ func (r *Raindrop) Name() string {
 	return r.name
 }
 
-func (r *Raindrop) Render(stripe LEDStripe) LEDStripe {
+func (r *Raindrop) Render(stripe core.LEDStripe) core.LEDStripe {
 	r.RLock()
 	defer r.RUnlock()
 
