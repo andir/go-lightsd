@@ -22,7 +22,7 @@ func NewMqttConnection(broker string, clientId string, pipeline core.Pipeline) {
 		panic(token.Error())
 	}
 
-	for name, op := range pipeline {
+	for _, op := range pipeline {
 		v := reflect.ValueOf(op).Elem()
 		t := v.Type()
 
@@ -35,7 +35,7 @@ func NewMqttConnection(broker string, clientId string, pipeline core.Pipeline) {
 				continue
 			}
 
-			topic := fmt.Sprintf("lightsd/%s/%s/set", name, tag)
+			topic := fmt.Sprintf("lightsd/%s/%s/set", op.Name(), tag)
 
 			var parse func(s string) (reflect.Value, error)
 
