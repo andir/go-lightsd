@@ -86,6 +86,8 @@ func NewMqttConnection(broker string, clientId string, pipeline Pipeline) {
 				}
 
 				log.Printf("Setting fieldValue: %s:%s(%s) = %v", t.Name(), fieldType.Name, fieldType.Type.Name(), val)
+				op.Lock()
+				defer op.Unlock()
 				fieldValue.Set(val)
 			})
 

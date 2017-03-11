@@ -126,6 +126,8 @@ func main() {
         }
     }()
 
+    sink := NewSHMOutput("/test", len(stripe.LEDS))
+
     for {
         s := time.Now()
         for i := range pipeline {
@@ -139,6 +141,7 @@ func main() {
 
         elapsed := time.Now().Sub(s)
 
+        sink.Render(l)
         bc.Broadcast(l)
         interval := time.Second / time.Duration(fps)
 
