@@ -1,13 +1,16 @@
 package main
 
-type Pipeline map[string] Operation
+type Pipeline []Operation
 
 type Operation interface {
+	Name() string
+
 	Lock()
 	Unlock()
 	RLock()
 	RUnlock()
-	Render(LEDStripe)
+
+	Render(LEDStripe) LEDStripe
 }
 
 

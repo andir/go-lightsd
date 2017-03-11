@@ -70,14 +70,13 @@ func main() {
     broker := flag.String("broker", "tcp://whisky.w17.io:1883", "The broker URI. ex: tcp://whisky.w17.io:1883")
     id := flag.String("id", "super-lightsd", "The ClientID (optional)")
 
-    stripe := NewLEDStripe(1000)
-
+    count := 1000
     fps := 60
 
-    pipeline := map[string]Operation{
-        //"rainbow":   NewRainbow(),
-        "raindrops": NewRaindrop(),
-        //"rotation":  NewRotation(60.0),
+    pipeline := []Operation{
+        NewRainbow("rainbow"),
+        //NewRaindrop("raindrops"),
+        NewRotation("rotation", 50.0),
     }
 
     NewMqttConnection(*broker, *id, pipeline)
@@ -93,19 +92,22 @@ func main() {
         }
     }()
 
-    sink := NewSHMOutput("/test", len(stripe))
+    sink := NewSHMOutput("/test", count)
+
+    stripe := NewLEDStripe(count)
 
     for {
         s := time.Now()
+
+        result := stripe
         for i := range pipeline {
-            //log.Printf("%v", i)
-            pipeline[i].Render(stripe)
+            result = pipeline[i].Render(result)
         }
 
         elapsed := time.Now().Sub(s)
 
-        sink.Render(stripe)
-        bc.Broadcast(stripe)
+        sink.Render(result)
+        bc.Broadcast(result)
         interval := time.Second / time.Duration(fps)
 
         diff := interval - elapsed

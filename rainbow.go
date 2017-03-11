@@ -2,18 +2,20 @@ package main
 
 import (
 	"github.com/lucasb-eyer/go-colorful"
-	"image/color"
 	"sync"
 )
 
 
 type Rainbow struct {
+	name string
+
 	sync.RWMutex
+
 	gradients *GradientTable
 }
 
 
-func NewRainbow() Operation {
+func NewRainbow(name string) Operation {
 	keypoints := &GradientTable{
 		//{MustParseHex("#9e0142"), 0.0},
 		//{MustParseHex("#d53e4f"), 0.1},
@@ -48,6 +50,7 @@ func NewRainbow() Operation {
 
 
 	s := &Rainbow{
+		name: name,
 		gradients: keypoints,
 	}
 	return s
@@ -87,20 +90,24 @@ func MustParseHex(s string) colorful.Color {
     return c
 }
 
+func (r *Rainbow) Name() string {
+	return r.name
+}
 
-func (r *Rainbow) Render(stripe LEDStripe) {
+func (r *Rainbow) Render(stripe LEDStripe) LEDStripe {
 	r.RLock()
 	defer r.RUnlock()
 	l := len(stripe)
 	for i := range stripe {
 		pos := float64(i)/float64(l)
 		c := r.gradients.GetInterpolatedColorFor(pos)
-		r,g,b := c.RGB255()
-		stripe[i] = color.RGBA{
-			R: uint8(r),
-			G: uint8(g),
-			B: uint8(b),
-			A: 0.0,
-		}
+		r, g, b := c.RGB255()
+
+		stripe[i].R = uint8(r)
+		stripe[i].G = uint8(g)
+		stripe[i].B = uint8(b)
+		stripe[i].A = 0.0
 	}
+
+	return stripe
 }

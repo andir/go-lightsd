@@ -2,64 +2,54 @@ package main
 
 import (
 	"time"
-	"image/color"
 	"sync"
 )
 
 type Rotation struct {
+	name string
+
 	sync.RWMutex
+
 	StepsPerSecond float64 `mqtt:"speed"`
 	LastFrameTime time.Time
+
 	Offset float64
 }
 
-func rotateLEDs(leds []color.RGBA, k int)  {
-    nlen := len(leds)
-    if nlen <= 1 {
-        return
-    }
+func (r *Rotation) Render(stripe LEDStripe) LEDStripe {
+	now := time.Now()
 
-    k = k % nlen
-    if k == 0 {
-        return
-    }
+	delta := now.Sub(r.LastFrameTime)
 
-    for i := 0; i < k; i++ {
-        for j := nlen - 1; j > 0; j-- {
-            leds[j], leds[j-1] = leds[j-1], leds[j]
-        }
-    }
-}
+	r.Offset += delta.Seconds() * r.StepsPerSecond
+	r.LastFrameTime = now
 
-func (r *Rotation) Render(stripe LEDStripe) {
+	iOffset := int(r.Offset) % len(stripe)
 
-	if r.StepsPerSecond == 0 {
-		return
+	if iOffset == 0 {
+		return stripe
 	}
 
-	if r.LastFrameTime.Equal(time.Time{}) {
-		r.LastFrameTime = time.Now()
-	} else {
-		now := time.Now()
-		diff := now.Sub(r.LastFrameTime)
-		ndiff := diff.Nanoseconds()
-
-		timePerStep := time.Second / time.Duration(r.StepsPerSecond)
-
-		r.Offset += float64(ndiff) / float64(timePerStep)
-		r.LastFrameTime = now
-
-		iOffset := int(r.Offset) % len(stripe)
-		rotateLEDs(stripe, iOffset)
+	output := NewLEDStripe(len(stripe))
+	for i, s := range(stripe) {
+		output[(i + iOffset) % len(stripe)] = s
 	}
+
+	return output
 }
 
-func NewRotation(StepsPerSecond float64) Operation {
+func NewRotation(name string, StepsPerSecond float64) Operation {
 	s := &Rotation{
+		name: name,
+
 		StepsPerSecond: StepsPerSecond,
 		LastFrameTime: time.Time{},
 		Offset: 0.0,
 	}
 
 	return s
+}
+
+func (r *Rotation) Name() string {
+	return r.name
 }

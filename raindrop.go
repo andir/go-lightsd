@@ -9,6 +9,8 @@ import (
 )
 
 type Raindrop struct {
+	name string
+
 	sync.RWMutex
 
 	HueMin float64 `mqtt:"hue_min"`
@@ -79,8 +81,10 @@ func (r *Raindrop) HitLED(led *RaindropLED) {
 	led.DecayRate = 1.0 - decayRate
 }
 
-func NewRaindrop() Operation {
+func NewRaindrop(name string) Operation {
 	return &Raindrop{
+		name: name,
+
 		HueMin: 0.0,
 		HueMax: 360.0,
 
@@ -99,7 +103,11 @@ func NewRaindrop() Operation {
 	}
 }
 
-func (r *Raindrop) Render(stripe LEDStripe) {
+func (r *Raindrop) Name() string {
+	return r.name
+}
+
+func (r *Raindrop) Render(stripe LEDStripe) LEDStripe {
 	r.RLock()
 	defer r.RUnlock()
 
@@ -120,4 +128,6 @@ func (r *Raindrop) Render(stripe LEDStripe) {
 		r, g, b := l.Color.RGB255()
 		stripe[i] = color.RGBA{R:r, G:g, B:b, A:0}
 	}
+
+	return stripe
 }
