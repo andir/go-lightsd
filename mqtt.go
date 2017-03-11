@@ -4,16 +4,16 @@ import (
 	MQTT "github.com/eclipse/paho.mqtt.golang"
 	"reflect"
 	"log"
+	"fmt"
+	"strconv"
 )
 
 
-func NewMqttConnection(broker, clientId string, pipeline []Operation) {
+func NewMqttConnection(broker string, clientId string, pipeline Pipeline) {
 
 	opts := MQTT.NewClientOptions()
 	opts.AddBroker(broker)
 	opts.SetClientID(clientId)
-
-
 
 	client := MQTT.NewClient(opts)
 
@@ -21,22 +21,56 @@ func NewMqttConnection(broker, clientId string, pipeline []Operation) {
 		panic(token.Error())
 	}
 
-	for _, op := range pipeline {
-		var foo interface{} = op
+	for name, op := range pipeline {
+		t := reflect.TypeOf(op).Elem()
 
-		reflect.Indirect()
-
-		t := reflect.TypeOf(foo)
-		log.Println(t)
 		for i:= 0; i < t.NumField(); i++ {
 			f := t.Field(i)
-			name := f.Name
-			switch f.Type.Name() {
-			default:
-				log.Printf("type: %v", f.Type.Name())
-			case "float32":
-				log.Printf("float32 %v", name)
+
+			tag, found := f.Tag.Lookup("mqtt")
+			if !found {
+				continue
 			}
+
+			topic := fmt.Sprintf("lightsd/%s/%s/set", name, tag)
+			log.Printf("Found MQTT exported parameter: %s:%s(%s) as %s", t.Name(), f.Name, f.Type.Name(), topic)
+
+			client.Subscribe(topic, 0, func(c MQTT.Client, m MQTT.Message) {
+				s := string(m.Payload())
+
+				log.Printf("Setting value: %s:%s(%s) = %s", t.Name(), f.Name, f.Type.Name(), s)
+
+				log.Printf("XXX: %v", reflect.ValueOf(op).Elem().Field(i))
+
+				switch f.Type.Kind() {
+				case reflect.Float64:
+					val, err := strconv.ParseFloat(s, 64)
+					if err != nil {
+						log.Printf("Failed to parse float: %s: %v", s, err)
+					}
+
+					reflect.ValueOf(op).Field(i).SetFloat(val)
+
+				case reflect.Int:
+					val, err := strconv.ParseInt(s, 10, 64)
+					if err != nil {
+						log.Printf("Failed to parse int: %s: %v", s, err)
+					}
+
+					reflect.ValueOf(op).Field(i).SetInt(val)
+
+				case reflect.Bool:
+					val, err := strconv.ParseBool(s)
+					if err != nil {
+						log.Printf("Failed to parse bool: %s: %v", s, err)
+					}
+
+					reflect.ValueOf(op).Field(i).SetBool(val)
+
+				case reflect.String:
+					reflect.ValueOf(op).Field(i).SetString(s)
+				}
+			})
 		}
 	}
 

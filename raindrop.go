@@ -4,7 +4,6 @@ import (
 	"math/rand"
 	"github.com/lucasb-eyer/go-colorful"
 	"image/color"
-	"log"
 	"sync"
 )
 
@@ -65,7 +64,7 @@ func (r *RaindropLED) Decay() {
 
 
 func (r *Raindrop) HitLED(led *RaindropLED) {
-	log.Println("hit")
+	//log.Println("hit")
 	saturation := randomFloat64(r.SaturationMin, r.SaturationMax)
 	hue := randomFloat64(r.HueMin, r.HueMax)
 	value := randomFloat64(r.ValueMin, r.ValueMax)

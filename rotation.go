@@ -4,11 +4,12 @@ import (
 	"time"
 	"image/color"
 	"sync"
+	"log"
 )
 
 type Rotation struct {
 	sync.RWMutex
-	StepsPerSecond float32
+	StepsPerSecond float32 `mqtt:"speed"`
 	LastFrameTime time.Time
 	Offset float32
 }
@@ -32,6 +33,8 @@ func rotateLEDs(leds []color.RGBA, k int)  {
 }
 
 func (r *Rotation) Render(stripe *LEDStripe) {
+	log.Printf("sps: %v", r.StepsPerSecond)
+
 	if r.LastFrameTime.Equal(time.Time{}) {
 		r.LastFrameTime = time.Now()
 	} else {
