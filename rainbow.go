@@ -88,15 +88,15 @@ func MustParseHex(s string) colorful.Color {
 }
 
 
-func (r *Rainbow) Render(stripe *LEDStripe) {
+func (r *Rainbow) Render(stripe LEDStripe) {
 	r.RLock()
 	defer r.RUnlock()
-	l := len(stripe.LEDS)
-	for i := range stripe.LEDS {
+	l := len(stripe)
+	for i := range stripe {
 		pos := float64(i)/float64(l)
 		c := r.gradients.GetInterpolatedColorFor(pos)
 		r,g,b := c.RGB255()
-		stripe.LEDS[i] = color.RGBA{
+		stripe[i] = color.RGBA{
 			R: uint8(r),
 			G: uint8(g),
 			B: uint8(b),

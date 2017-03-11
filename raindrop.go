@@ -99,15 +99,15 @@ func NewRaindrop() Operation {
 	}
 }
 
-func (r *Raindrop) Render(stripe *LEDStripe) {
+func (r *Raindrop) Render(stripe LEDStripe) {
 	r.RLock()
 	defer r.RUnlock()
 
-	if r.leds == nil || len(r.leds) != len(stripe.LEDS) {
-		r.leds = make([]RaindropLED, len(stripe.LEDS))
+	if r.leds == nil || len(r.leds) != len(stripe) {
+		r.leds = make([]RaindropLED, len(stripe))
 	}
 
-	for i := range stripe.LEDS {
+	for i := range stripe {
 		roll := randomFloat64(r.rand,0.0, 1.0)
 
 		l := &r.leds[i]
@@ -118,6 +118,6 @@ func (r *Raindrop) Render(stripe *LEDStripe) {
 		l.Decay()
 
 		r, g, b := l.Color.RGB255()
-		stripe.LEDS[i] = color.RGBA{R:r, G:g, B:b, A:0}
+		stripe[i] = color.RGBA{R:r, G:g, B:b, A:0}
 	}
 }

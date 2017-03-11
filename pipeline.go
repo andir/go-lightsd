@@ -7,7 +7,7 @@ type Operation interface {
 	Unlock()
 	RLock()
 	RUnlock()
-	Render(*LEDStripe)
+	Render(LEDStripe)
 }
 
 

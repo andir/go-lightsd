@@ -31,7 +31,7 @@ func rotateLEDs(leds []color.RGBA, k int)  {
     }
 }
 
-func (r *Rotation) Render(stripe *LEDStripe) {
+func (r *Rotation) Render(stripe LEDStripe) {
 
 	if r.StepsPerSecond == 0 {
 		return
@@ -49,8 +49,8 @@ func (r *Rotation) Render(stripe *LEDStripe) {
 		r.Offset += float64(ndiff) / float64(timePerStep)
 		r.LastFrameTime = now
 
-		iOffset := int(r.Offset) % len(stripe.LEDS)
-		rotateLEDs(stripe.LEDS, iOffset)
+		iOffset := int(r.Offset) % len(stripe)
+		rotateLEDs(stripe, iOffset)
 	}
 }
 

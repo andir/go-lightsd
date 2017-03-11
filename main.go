@@ -11,24 +11,6 @@ import (
     "flag"
 )
 
-type LEDStripe struct {
-    LEDS []color.RGBA
-}
-
-func NewLEDStripe(count int) *LEDStripe {
-    stripe := &LEDStripe{
-        LEDS: make([]color.RGBA, count),
-    }
-
-    return stripe
-}
-
-type LEDRGB struct {
-    R uint8
-    G uint8
-    B uint8
-}
-
 func CreateStreamHandler(broadcaster *WebsocketBroadcaster) websocket.Handler {
     return func(ws *websocket.Conn) {
         broadcaster.Add(ws)
@@ -85,7 +67,6 @@ func (b *WebsocketBroadcaster) Broadcast(l []color.RGBA) {
 }
 
 func main() {
-
     broker := flag.String("broker", "tcp://whisky.w17.io:1883", "The broker URI. ex: tcp://whisky.w17.io:1883")
     id := flag.String("id", "super-lightsd", "The ClientID (optional)")
 
@@ -112,7 +93,7 @@ func main() {
         }
     }()
 
-    sink := NewSHMOutput("/test", len(stripe.LEDS))
+    sink := NewSHMOutput("/test", len(stripe))
 
     for {
         s := time.Now()
@@ -123,8 +104,8 @@ func main() {
 
         elapsed := time.Now().Sub(s)
 
-        sink.Render(stripe.LEDS)
-        bc.Broadcast(stripe.LEDS)
+        sink.Render(stripe)
+        bc.Broadcast(stripe)
         interval := time.Second / time.Duration(fps)
 
         diff := interval - elapsed
