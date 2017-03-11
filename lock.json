@@ -1,0 +1,38 @@
+{
+    "memo": "54ea5a59f0b9d232dd871e47477dfde599dc7feed304a2191effd8424ba4728b",
+    "projects": [
+        {
+            "name": "github.com/eclipse/paho.mqtt.golang",
+            "branch": "master",
+            "revision": "dfe35ae8bd6ead198596c5e5f4af1f55914741cf",
+            "packages": [
+                ".",
+                "packets"
+            ]
+        },
+        {
+            "name": "github.com/lucasb-eyer/go-colorful",
+            "branch": "master",
+            "revision": "c900de9dbbc73129068f5af6a823068fc5f2308c",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "github.com/sbinet/go-python",
+            "branch": "master",
+            "revision": "a2acb64fbdf8703949837e5ebf50c71319fe03a4",
+            "packages": [
+                "."
+            ]
+        },
+        {
+            "name": "golang.org/x/net",
+            "branch": "master",
+            "revision": "a6577fac2d73be281a500b310739095313165611",
+            "packages": [
+                "websocket"
+            ]
+        }
+    ]
+}

@@ -1,0 +1,16 @@
+{
+    "dependencies": {
+        "github.com/eclipse/paho.mqtt.golang": {
+            "branch": "master"
+        },
+        "github.com/lucasb-eyer/go-colorful": {
+            "branch": "master"
+        },
+        "github.com/sbinet/go-python": {
+            "branch": "master"
+        },
+        "golang.org/x/net": {
+            "branch": "master"
+        }
+    }
+}
