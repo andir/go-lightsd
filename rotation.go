@@ -9,9 +9,9 @@ import (
 
 type Rotation struct {
 	sync.RWMutex
-	StepsPerSecond float32 `mqtt:"speed"`
+	StepsPerSecond float64 `mqtt:"speed"`
 	LastFrameTime time.Time
-	Offset float32
+	Offset float64
 }
 
 func rotateLEDs(leds []color.RGBA, k int)  {
@@ -44,7 +44,7 @@ func (r *Rotation) Render(stripe *LEDStripe) {
 
 		timePerStep := time.Second / time.Duration(r.StepsPerSecond)
 
-		r.Offset += float32(ndiff) / float32(timePerStep)
+		r.Offset += float64(ndiff) / float64(timePerStep)
 		r.LastFrameTime = now
 
 		iOffset := int(r.Offset) % len(stripe.LEDS)
@@ -52,7 +52,7 @@ func (r *Rotation) Render(stripe *LEDStripe) {
 	}
 }
 
-func NewRotation(StepsPerSecond float32) Operation {
+func NewRotation(StepsPerSecond float64) Operation {
 	s := &Rotation{
 		StepsPerSecond: StepsPerSecond,
 		LastFrameTime: time.Time{},

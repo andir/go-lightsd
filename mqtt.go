@@ -22,55 +22,74 @@ func NewMqttConnection(broker string, clientId string, pipeline Pipeline) {
 	}
 
 	for name, op := range pipeline {
-		t := reflect.TypeOf(op).Elem()
+		v := reflect.ValueOf(op).Elem()
+		t := v.Type()
 
 		for i:= 0; i < t.NumField(); i++ {
-			f := t.Field(i)
+			fieldType := t.Field(i)
+			fieldValue := v.Field(i)
 
-			tag, found := f.Tag.Lookup("mqtt")
+			tag, found := fieldType.Tag.Lookup("mqtt")
 			if !found {
 				continue
 			}
 
 			topic := fmt.Sprintf("lightsd/%s/%s/set", name, tag)
-			log.Printf("Found MQTT exported parameter: %s:%s(%s) as %s", t.Name(), f.Name, f.Type.Name(), topic)
 
-			client.Subscribe(topic, 0, func(c MQTT.Client, m MQTT.Message) {
-				s := string(m.Payload())
+			var parse func(s string) (reflect.Value, error)
 
-				log.Printf("Setting value: %s:%s(%s) = %s", t.Name(), f.Name, f.Type.Name(), s)
-
-				log.Printf("XXX: %v", reflect.ValueOf(op).Elem().Field(i))
-
-				switch f.Type.Kind() {
-				case reflect.Float64:
+			switch k := fieldType.Type.Kind(); k {
+			case reflect.Float64:
+				parse = func(s string) (reflect.Value, error) {
 					val, err := strconv.ParseFloat(s, 64)
 					if err != nil {
-						log.Printf("Failed to parse float: %s: %v", s, err)
+						return reflect.ValueOf(nil), err
 					}
 
-					reflect.ValueOf(op).Field(i).SetFloat(val)
+					return reflect.ValueOf(val), nil
+				}
 
-				case reflect.Int:
+			case reflect.Int:
+				parse = func(s string) (reflect.Value, error) {
 					val, err := strconv.ParseInt(s, 10, 64)
 					if err != nil {
-						log.Printf("Failed to parse int: %s: %v", s, err)
+						return reflect.ValueOf(nil), err
 					}
 
-					reflect.ValueOf(op).Field(i).SetInt(val)
+					return reflect.ValueOf(val), nil
+				}
 
-				case reflect.Bool:
+			case reflect.Bool:
+				parse = func(s string) (reflect.Value, error) {
 					val, err := strconv.ParseBool(s)
 					if err != nil {
-						log.Printf("Failed to parse bool: %s: %v", s, err)
+						return reflect.ValueOf(nil), err
 					}
 
-					reflect.ValueOf(op).Field(i).SetBool(val)
-
-				case reflect.String:
-					reflect.ValueOf(op).Field(i).SetString(s)
+					return reflect.ValueOf(val), nil
 				}
+
+			case reflect.String:
+				parse = func(s string) (reflect.Value, error) {
+					return reflect.ValueOf(s), nil
+				}
+
+			default:
+				log.Fatalf("Unsupported type: %v", k)
+			}
+
+			client.Subscribe(topic, 0, func(c MQTT.Client, m MQTT.Message) {
+				val, err := parse(string(m.Payload()))
+				if err != nil {
+					log.Printf("Failed to parse: %s: %v", m.Payload(), err)
+					return
+				}
+
+				log.Printf("Setting fieldValue: %s:%s(%s) = %v", t.Name(), fieldType.Name, fieldType.Type.Name(), val)
+				fieldValue.Set(val)
 			})
+
+			log.Printf("Found MQTT exported parameter: %s:%s(%s) as %s", t.Name(), fieldType.Name, fieldType.Type.Name(), topic)
 		}
 	}
 
