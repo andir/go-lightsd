@@ -61,3 +61,7 @@ operations:
     config:
       speed: 30.0
       source: rainbow
+  - name: test
+    type: lua
+    config:
+      path: example/test.lua

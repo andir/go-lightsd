@@ -2,8 +2,8 @@ package operations
 
 import (
     "sync"
-    "../core"
-    "../utils"
+    "../../core"
+    "../../utils"
     "reflect"
     "time"
 )
@@ -15,7 +15,7 @@ type RainbowConfig struct {
 type Rainbow struct {
     sync.RWMutex
 
-    name string
+    name   string
     stripe core.LEDStripe
 
     gradients *utils.GradientTable
@@ -72,8 +72,9 @@ func init() {
             }
 
             return &Rainbow{
-                name:      name,
+                name:   name,
                 stripe: core.NewLEDStripe(count),
+
                 gradients: keypoints,
             }, nil
         },

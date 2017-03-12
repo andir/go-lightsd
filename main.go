@@ -4,6 +4,7 @@ import (
     "time"
     "flag"
     "./core"
+    "./outputs/shm"
     _ "./operations"
 )
 
@@ -26,7 +27,7 @@ func main() {
     NewMqttConnection(config, pipeline)
 
     bc := StartDebug()
-    sink := NewSHMOutput("/test", config.Size)
+    sink := shm.NewSHMOutput("/test", config.Size)
 
     interval := time.Second / time.Duration(config.FPS)
 

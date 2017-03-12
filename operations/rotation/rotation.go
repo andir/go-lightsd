@@ -3,7 +3,7 @@ package operations
 import (
     "time"
     "sync"
-    "../core"
+    "../../core"
     "reflect"
     "fmt"
 )
@@ -56,8 +56,7 @@ func init() {
             }
 
             return &Rotation{
-                name: name,
-
+                name:   name,
                 stripe: core.NewLEDStripe(count),
 
                 Source:         source,

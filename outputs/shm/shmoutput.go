@@ -1,4 +1,4 @@
-package main
+package shm
 
 import (
 	"unsafe"

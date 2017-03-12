@@ -5,7 +5,7 @@ import (
     "github.com/lucasb-eyer/go-colorful"
     "image/color"
     "sync"
-    "../core"
+    "../../core"
     "time"
     "reflect"
 )
@@ -120,7 +120,7 @@ func init() {
             config := rconfig.(*RaindropConfig)
 
             return &Raindrop{
-                name: name,
+                name:   name,
                 stripe: core.NewLEDStripe(count),
 
                 HueMin: config.HueMin,
