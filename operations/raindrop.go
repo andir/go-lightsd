@@ -11,19 +11,19 @@ import (
 )
 
 type RaindropConfig struct {
-    HueMin float64 `yaml:"hue_min"`
-    HueMax float64 `yaml:"hue_max"`
+    HueMin float64 `mapstructure:"hue_min"`
+    HueMax float64 `mapstructure:"hue_max"`
 
-    SaturationMin float64 `yaml:"sat_min"`
-    SaturationMax float64 `yaml:"sat_max"`
+    SaturationMin float64 `mapstructure:"sat_min"`
+    SaturationMax float64 `mapstructure:"sat_max"`
 
-    ValueMin float64 `yaml:"val_min"`
-    ValueMax float64 `yaml:"val_max"`
+    ValueMin float64 `mapstructure:"val_min"`
+    ValueMax float64 `mapstructure:"val_max"`
 
-    DecayLow  float64 `yaml:"decay_low"`
-    DecayHigh float64 `yaml:"decay_high"`
+    DecayLow  float64 `mapstructure:"decay_low"`
+    DecayHigh float64 `mapstructure:"decay_high"`
 
-    Chance float64 `yaml:"chance"`
+    Chance float64 `mapstructure:"chance"`
 }
 
 type Raindrop struct {

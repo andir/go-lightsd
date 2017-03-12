@@ -9,8 +9,8 @@ import (
 )
 
 type RotationConfig struct {
-    Source         string
-    PixelPerSecond float64
+    Source         string `mapstructure:"source"`
+    PixelPerSecond float64 `mapstructure:"speed"`
 }
 
 type Rotation struct {
@@ -62,6 +62,8 @@ func init() {
             if source == nil {
                 return nil, fmt.Errorf("Unknown source: %s", config.Source)
             }
+
+            fmt.Println(config.PixelPerSecond)
 
             return &Rotation{
                 name: name,
