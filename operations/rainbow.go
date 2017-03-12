@@ -5,6 +5,7 @@ import (
     "../core"
     "../utils"
     "reflect"
+    "time"
 )
 
 type RainbowConfig struct {
@@ -26,6 +27,9 @@ func (this *Rainbow) Name() string {
 
 func (this *Rainbow) Stripe() core.LEDStripe {
     return this.stripe
+}
+
+func (this *Rainbow) Update(duration time.Duration) {
 }
 
 func (this *Rainbow) Render() {

@@ -5,16 +5,38 @@ import (
     "reflect"
     "sync"
     "github.com/mitchellh/mapstructure"
+    "time"
 )
 
-type Pipeline []Operation
+type Operation interface {
+    sync.Locker
 
-func NewPipeline() Pipeline {
-    return make([]Operation, 0)
+    Name() string
+    Stripe() LEDStripe
+
+    Update(duration time.Duration)
+    Render()
+}
+
+type Pipeline struct {
+    operations []Operation
+
+    lastRendered time.Time
+}
+
+func NewPipeline() *Pipeline {
+    return &Pipeline{
+        operations: make([]Operation, 0),
+        lastRendered: time.Now(),
+    }
+}
+
+func (p *Pipeline) Operations() []Operation {
+    return p.operations
 }
 
 func (p *Pipeline) ByName(name string) Operation {
-    for _, op := range *p {
+    for _, op := range p.operations {
         if op.Name() == name {
             return op
         }
@@ -23,13 +45,25 @@ func (p *Pipeline) ByName(name string) Operation {
     return nil
 }
 
-type Operation interface {
-    sync.Locker
+func (p *Pipeline) Result() LEDStripe {
+    return p.operations[len(p.operations) - 1].Stripe()
+}
 
-    Name() string
-    Stripe() LEDStripe
+func (p *Pipeline) Render() time.Duration {
+    now := time.Now()
 
-    Render()
+    duration := now.Sub(p.lastRendered)
+
+    for _, op := range p.operations {
+        op.Lock()
+        op.Update(duration)
+        op.Unlock()
+        op.Render()
+    }
+
+    p.lastRendered = now
+
+    return duration
 }
 
 type OperationFactory struct {
@@ -66,5 +100,5 @@ func (p *Pipeline) NewOperation(t string, name string, count int, config map[str
         panic(err)
     }
 
-    *p = append(*p, op)
+    p.operations = append(p.operations, op)
 }

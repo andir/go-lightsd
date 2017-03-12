@@ -23,8 +23,6 @@ type Rotation struct {
     PixelPerSecond float64  `mqtt:"speed"`
 
     offset float64
-
-    LastFrameTime time.Time
 }
 
 func (this *Rotation) Name() string {
@@ -35,15 +33,12 @@ func (this *Rotation) Stripe() core.LEDStripe {
     return this.stripe
 }
 
+func (this *Rotation) Update(duration time.Duration) {
+    this.offset += duration.Seconds() * this.PixelPerSecond
+}
+
 func (this *Rotation) Render() {
-    now := time.Now()
-    delta := now.Sub(this.LastFrameTime)
-
-    this.offset += delta.Seconds() * this.PixelPerSecond
-    this.LastFrameTime = now
-
     iOffset := int(this.offset) % len(this.stripe)
-
     for i, s := range this.Source.Stripe() {
         this.stripe[(i+iOffset)%len(this.stripe)] = s
     }
@@ -60,8 +55,6 @@ func init() {
                 return nil, fmt.Errorf("Unknown source: %s", config.Source)
             }
 
-            fmt.Println(config.PixelPerSecond)
-
             return &Rotation{
                 name: name,
 
@@ -71,8 +64,6 @@ func init() {
                 PixelPerSecond: config.PixelPerSecond,
 
                 offset: 0.0,
-
-                LastFrameTime: time.Time{},
             }, nil
         },
     })

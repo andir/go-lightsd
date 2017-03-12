@@ -29,7 +29,7 @@ type RaindropConfig struct {
 type Raindrop struct {
     sync.RWMutex
 
-    name string
+    name   string
     stripe core.LEDStripe
 
     HueMin float64 `mqtt:"hue_min"`
@@ -76,26 +76,6 @@ func randomFloat64(ra *rand.Rand, min, max float64) float64 {
     return (ra.Float64() * (max - min)) + min
 }
 
-func (this *RaindropLED) Decay() {
-    factor := maxFloat64(minFloat64(this.DecayRate, 1.0), 0.0)
-    h, s, v := this.Color.Hsv()
-    v *= float64(factor)
-    this.Color = colorful.Hsv(h, s, v)
-}
-
-func (this *Raindrop) HitLED(led *RaindropLED) {
-    //log.Println("hit")
-    saturation := randomFloat64(this.rand, this.SaturationMin, this.SaturationMax)
-    hue := randomFloat64(this.rand, this.HueMin, this.HueMax)
-    value := randomFloat64(this.rand, this.ValueMin, this.ValueMax)
-
-    decayRate := randomFloat64(this.rand, this.DecayLow, this.DecayHigh)
-
-    //log.Printf("H: %v S: %v V: %v, R: %v", hue, saturation, value, decayRate)
-    led.Color = colorful.Hsv(hue, saturation, value)
-    led.DecayRate = 1.0 - decayRate
-}
-
 func (this *Raindrop) Name() string {
     return this.name
 }
@@ -104,21 +84,30 @@ func (this *Raindrop) Stripe() core.LEDStripe {
     return this.stripe
 }
 
-func (this *Raindrop) Render() {
-    if this.leds == nil || len(this.leds) != len(this.stripe) {
-        this.leds = make([]RaindropLED, len(this.stripe))
-    }
-
-    for i := range this.stripe {
+func (this *Raindrop) Update(duration time.Duration) {
+    for _, l := range this.leds {
         roll := randomFloat64(this.rand, 0.0, 1.0)
 
-        l := &this.leds[i]
         if roll > this.Chance {
-            this.HitLED(l)
+            saturation := randomFloat64(this.rand, this.SaturationMin, this.SaturationMax)
+            hue := randomFloat64(this.rand, this.HueMin, this.HueMax)
+            value := randomFloat64(this.rand, this.ValueMin, this.ValueMax)
+
+            decayRate := randomFloat64(this.rand, this.DecayLow, this.DecayHigh)
+
+            l.Color = colorful.Hsv(hue, saturation, value)
+            l.DecayRate = 1.0 - decayRate
         }
 
-        l.Decay()
+        factor := maxFloat64(minFloat64(l.DecayRate, 1.0), 0.0)
+        h, s, v := l.Color.Hsv()
+        v *= float64(factor)
+        l.Color = colorful.Hsv(h, s, v)
+    }
+}
 
+func (this *Raindrop) Render() {
+    for i, l := range this.leds {
         r, g, b := l.Color.RGB255()
         this.stripe[i] = color.RGBA{R: r, G: g, B: b, A: 0}
     }
@@ -132,6 +121,7 @@ func init() {
 
             return &Raindrop{
                 name: name,
+                stripe: core.NewLEDStripe(count),
 
                 HueMin: config.HueMin,
                 HueMax: config.HueMax,
@@ -148,6 +138,7 @@ func init() {
                 Chance: config.Chance,
 
                 rand: rand.New(rand.NewSource(time.Now().Unix())),
+                leds: make([]RaindropLED, count),
             }, nil
         },
     })

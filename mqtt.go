@@ -10,7 +10,7 @@ import (
 )
 
 
-func NewMqttConnection(config *Config, pipeline core.Pipeline) {
+func NewMqttConnection(config *Config, pipeline *core.Pipeline) {
 	opts := MQTT.NewClientOptions()
 	opts.AddBroker(fmt.Sprintf("tcp://%s:%d/", config.MQTT.Host, config.MQTT.Port))
 	opts.SetClientID(config.MQTT.ClientID)
@@ -21,7 +21,7 @@ func NewMqttConnection(config *Config, pipeline core.Pipeline) {
 		panic(token.Error())
 	}
 
-	for _, op := range pipeline {
+	for _, op := range pipeline.Operations() {
 		v := reflect.ValueOf(op).Elem()
 		t := v.Type()
 

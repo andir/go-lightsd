@@ -26,25 +26,17 @@ func main() {
     NewMqttConnection(config, pipeline)
 
     bc := StartDebug()
-
     sink := NewSHMOutput("/test", config.Size)
 
+    interval := time.Second / time.Duration(config.FPS)
+
     for {
-        s := time.Now()
+        elapsed := pipeline.Render()
 
-        for _, p := range pipeline {
-            p.Lock()
-            p.Render()
-            p.Unlock()
-        }
-
-        elapsed := time.Now().Sub(s)
-
-        result := pipeline[len(pipeline) - 1].Stripe()
+        result := pipeline.Result()
 
         sink.Render(result)
         bc.Broadcast(result)
-        interval := time.Second / time.Duration(config.FPS)
 
         diff := interval - elapsed
         time.Sleep(diff)
