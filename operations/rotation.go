@@ -1,56 +1,80 @@
 package operations
 
 import (
-	"time"
-	"sync"
-	"../core"
+    "time"
+    "sync"
+    "../core"
+    "reflect"
+    "fmt"
 )
 
+type RotationConfig struct {
+    Source         string
+    PixelPerSecond float64
+}
+
 type Rotation struct {
-	name string
+    sync.RWMutex
 
-	sync.RWMutex
+    name   string
+    stripe core.LEDStripe
 
-	StepsPerSecond float64 `mqtt:"speed"`
-	LastFrameTime time.Time
+    Source         core.Operation
+    PixelPerSecond float64  `mqtt:"speed"`
 
-	Offset float64
+    offset float64
+
+    LastFrameTime time.Time
 }
 
-func (r *Rotation) Render(stripe core.LEDStripe) core.LEDStripe {
-	now := time.Now()
-
-	delta := now.Sub(r.LastFrameTime)
-
-	r.Offset += delta.Seconds() * r.StepsPerSecond
-	r.LastFrameTime = now
-
-	iOffset := int(r.Offset) % len(stripe)
-
-	if iOffset == 0 {
-		return stripe
-	}
-
-	output := core.NewLEDStripe(len(stripe))
-	for i, s := range(stripe) {
-		output[(i + iOffset) % len(stripe)] = s
-	}
-
-	return output
+func (this *Rotation) Name() string {
+    return this.name
 }
 
-func NewRotation(name string, StepsPerSecond float64) core.Operation {
-	s := &Rotation{
-		name: name,
-
-		StepsPerSecond: StepsPerSecond,
-		LastFrameTime: time.Time{},
-		Offset: 0.0,
-	}
-
-	return s
+func (this *Rotation) Stripe() core.LEDStripe {
+    return this.stripe
 }
 
-func (r *Rotation) Name() string {
-	return r.name
+func (this *Rotation) Render() {
+    this.RLock()
+    defer this.RUnlock()
+
+    now := time.Now()
+    delta := now.Sub(this.LastFrameTime)
+
+    this.offset += delta.Seconds() * this.PixelPerSecond
+    this.LastFrameTime = now
+
+    iOffset := int(this.offset) % len(this.stripe)
+
+    for i, s := range this.Source.Stripe() {
+        this.stripe[(i+iOffset)%len(this.stripe)] = s
+    }
+}
+
+func init() {
+    core.RegisterOperation("rotation", core.OperationFactory{
+        ConfigType: reflect.TypeOf(RotationConfig{}),
+        Create: func(pipeline *core.Pipeline, name string, count int, rconfig interface{}) (core.Operation, error) {
+            config := rconfig.(*RotationConfig)
+
+            source := pipeline.ByName(config.Source)
+            if source == nil {
+                return nil, fmt.Errorf("Unknown source: %s", config.Source)
+            }
+
+            return &Rotation{
+                name: name,
+
+                stripe: core.NewLEDStripe(count),
+
+                Source:         source,
+                PixelPerSecond: config.PixelPerSecond,
+
+                offset: 0.0,
+
+                LastFrameTime: time.Time{},
+            }, nil
+        },
+    })
 }

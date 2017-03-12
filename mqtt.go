@@ -10,11 +10,10 @@ import (
 )
 
 
-func NewMqttConnection(broker string, clientId string, pipeline core.Pipeline) {
-
+func NewMqttConnection(config *Config, pipeline core.Pipeline) {
 	opts := MQTT.NewClientOptions()
-	opts.AddBroker(broker)
-	opts.SetClientID(clientId)
+	opts.AddBroker(fmt.Sprintf("tcp://%s:%d/", config.MQTT.Host, config.MQTT.Port))
+	opts.SetClientID(config.MQTT.ClientID)
 
 	client := MQTT.NewClient(opts)
 
@@ -35,7 +34,7 @@ func NewMqttConnection(broker string, clientId string, pipeline core.Pipeline) {
 				continue
 			}
 
-			topic := fmt.Sprintf("lightsd/%s/%s/set", op.Name(), tag)
+			topic := fmt.Sprintf("%s/%s/%s/set", config.MQTT.Realm, op.Name(), tag)
 
 			var parse func(s string) (reflect.Value, error)
 
@@ -79,9 +78,9 @@ func NewMqttConnection(broker string, clientId string, pipeline core.Pipeline) {
 				log.Fatalf("Unsupported type: %v", k)
 			}
 
-			if t := client.Subscribe(topic, 0, func(c MQTT.Client, m MQTT.Message) {
-				log.Printf("MSG: %v", m)
+			log.Printf("Found MQTT exported parameter: %s:%s(%s) as %s", t.Name(), fieldType.Name, fieldType.Type.Name(), topic)
 
+			if t := client.Subscribe(topic, 0, func(c MQTT.Client, m MQTT.Message) {
 				val, err := parse(string(m.Payload()))
 				if err != nil {
 					log.Printf("Failed to parse: %s: %v", m.Payload(), err)
@@ -95,8 +94,6 @@ func NewMqttConnection(broker string, clientId string, pipeline core.Pipeline) {
 			}); t.Wait() && t.Error() != nil {
 				log.Fatal(t.Error())
 			}
-
-			log.Printf("Found MQTT exported parameter: %s:%s(%s) as %s", t.Name(), fieldType.Name, fieldType.Type.Name(), topic)
 		}
 	}
 

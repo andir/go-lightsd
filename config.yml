@@ -1,0 +1,63 @@
+fps: 60
+
+size: 1000
+
+mqtt:
+  host: localhost
+  port: 1883
+
+  clientid: lightsd
+  realm: lightsd
+
+debug:
+  enable: true
+  port: 9000
+
+outputs:
+  - name: stripe1
+    type: shm
+    size: 1200
+    file: /tmp/led2
+  - name: stripe2
+    type: shm
+    size: 1200
+    file: /tmp/led2
+
+operations:
+  - name: rainbow
+    type: rainbow
+    config:
+      gradient:
+        "#ff0000": 0.0
+        "#d52a00": 0.066
+        "#ab5500": 0.132
+        "#ab7f00": 0.198
+        "#abab00": 0.264
+        "#56d500": 0.330
+        "#00ff00": 0.396
+        "#00d52a": 0.462
+        "#00AB55": 0.528
+        "#0056AA": 0.594
+        "#0000ff": 0.660
+        "#2a00d5": 0.726
+        "#5500ab": 0.792
+        "#7f0081": 0.858
+        "#ab0055": 0.924
+        "#ff0000": 1.000
+  - name: raindrops
+    type: raindrops
+    config:
+      hue_min: 0.0
+      hue_max: 1.0
+      sat_min: 0.0
+      sat_max: 1.0
+      val_min: 0.0
+      val_max: 1.0
+      decay_min: 0.001
+      decay_max: 0.5
+      chance: 0.95
+  - name: rotation
+    type: rotation
+    config:
+      speed: 30.0
+      source: rainbow
