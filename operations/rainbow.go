@@ -29,9 +29,6 @@ func (this *Rainbow) Stripe() core.LEDStripe {
 }
 
 func (this *Rainbow) Render() {
-    this.RLock()
-    defer this.RUnlock()
-
     l := len(this.stripe)
     for i := range this.stripe {
         pos := float64(i) / float64(l)

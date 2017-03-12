@@ -105,9 +105,6 @@ func (this *Raindrop) Stripe() core.LEDStripe {
 }
 
 func (this *Raindrop) Render() {
-    this.RLock()
-    defer this.RUnlock()
-
     if this.leds == nil || len(this.leds) != len(this.stripe) {
         this.leds = make([]RaindropLED, len(this.stripe))
     }

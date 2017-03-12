@@ -36,9 +36,6 @@ func (this *Rotation) Stripe() core.LEDStripe {
 }
 
 func (this *Rotation) Render() {
-    this.RLock()
-    defer this.RUnlock()
-
     now := time.Now()
     delta := now.Sub(this.LastFrameTime)
 

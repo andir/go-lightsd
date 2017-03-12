@@ -32,8 +32,10 @@ func main() {
     for {
         s := time.Now()
 
-        for i := range pipeline {
-            pipeline[i].Render()
+        for _, p := range pipeline {
+            p.Lock()
+            p.Render()
+            p.Unlock()
         }
 
         elapsed := time.Now().Sub(s)
