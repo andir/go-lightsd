@@ -1,11 +1,11 @@
 package operations
 
 import (
-    "sync"
     "github.com/andir/lightsd/core"
     "github.com/andir/lightsd/utils"
+    "github.com/andir/lightsd/operations"
     "reflect"
-    "time"
+    "sync"
 )
 
 type RainbowConfig struct {
@@ -16,7 +16,6 @@ type Rainbow struct {
     sync.RWMutex
 
     name   string
-    stripe core.LEDStripe
 
     gradients *utils.GradientTable
 }
@@ -25,31 +24,22 @@ func (this *Rainbow) Name() string {
     return this.name
 }
 
-func (this *Rainbow) Stripe() core.LEDStripe {
-    return this.stripe
-}
+func (this *Rainbow) Render(context *core.RenderContext) {
+    l := float64(context.Count())
 
-func (this *Rainbow) Update(duration time.Duration) {
-}
-
-func (this *Rainbow) Render() {
-    l := len(this.stripe)
-    for i := range this.stripe {
-        pos := float64(i) / float64(l)
+    for i := 0; i < context.Count(); i++ {
+        pos := float64(i) / l
         c := this.gradients.GetInterpolatedColorFor(pos)
         r, g, b := c.RGB255()
 
-        this.stripe[i].R = uint8(r)
-        this.stripe[i].G = uint8(g)
-        this.stripe[i].B = uint8(b)
-        this.stripe[i].A = 0.0
+        context.Set(i, uint8(r), uint8(g), uint8(b))
     }
 }
 
 func init() {
-    core.RegisterOperation("rainbow", core.OperationFactory{
+    operations.Register("rainbow", &operations.Factory{
         ConfigType: reflect.TypeOf(struct{}{}),
-        Create: func(pipeline *core.Pipeline, name string, count int, rconfig interface{}) (core.Operation, error) {
+        Create: func(name string, count int, rconfig interface{}) (core.Operation, error) {
             //config := rconfig.(*RaindropConfig)
 
             keypoints := &utils.GradientTable{
@@ -73,7 +63,6 @@ func init() {
 
             return &Rainbow{
                 name:   name,
-                stripe: core.NewLEDStripe(count),
 
                 gradients: keypoints,
             }, nil

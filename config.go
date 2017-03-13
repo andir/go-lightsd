@@ -1,14 +1,36 @@
 package main
 
 import (
-    "gopkg.in/yaml.v2"
-    "io/ioutil"
     "fmt"
+    "reflect"
+    "io/ioutil"
+    "gopkg.in/yaml.v2"
+    "github.com/mitchellh/mapstructure"
+    "github.com/andir/lightsd/core"
+    "github.com/andir/lightsd/operations"
+    "github.com/andir/lightsd/outputs"
 )
+
+type OperationConfig struct {
+    Name   string
+    Type   string
+    Config map[string]interface{}
+}
+
+type OutputConfig struct {
+    Type   string
+    Config map[string]interface{}
+}
+
+type PipelineConfig struct {
+    Count int
+
+    Output     OutputConfig
+    Operations []OperationConfig
+}
 
 type Config struct {
     FPS uint
-    Size int
 
     MQTT struct {
         Host string
@@ -24,16 +46,7 @@ type Config struct {
         Port   int
     }
 
-    Outputs []struct {
-        Name string
-        Size uint16
-    }
-
-    Operations []struct {
-        Name string
-        Type string
-        Config map[string]interface{}
-    }
+    Pipelines map[string]PipelineConfig
 }
 
 func LoadConfig(path string) (*Config, error) {
@@ -52,4 +65,58 @@ func LoadConfig(path string) (*Config, error) {
     fmt.Printf("Config: %s\n", out)
 
     return config, nil
+}
+
+func BuildOutput(config PipelineConfig) core.Output {
+    f := outputs.Get(config.Output.Type)
+
+    c := reflect.New(f.ConfigType).Interface()
+    err := mapstructure.Decode(config.Output.Config, c)
+    if err != nil {
+        panic(err)
+    }
+
+    output, err := f.Create(config.Count, c)
+    if err != nil {
+        panic(err)
+    }
+
+    return output
+}
+
+func BuildOperation(config PipelineConfig, i int) core.Operation {
+    f := operations.Get(config.Operations[i].Type)
+
+    c := reflect.New(f.ConfigType).Interface()
+    err := mapstructure.Decode(config.Operations[i].Config, c)
+    if err != nil {
+        panic(err)
+    }
+
+    output, err := f.Create(config.Operations[i].Name, config.Count, c)
+    if err != nil {
+        panic(err)
+    }
+
+    return output
+}
+
+func BuildPipeline(name string, config PipelineConfig) *core.Pipeline {
+    output := BuildOutput(config)
+
+    operations := make([]core.Operation, 0, len(config.Operations))
+    for i := range config.Operations {
+        operations = append(operations, BuildOperation(config, i))
+    }
+
+    return core.NewPipeline(name, config.Count, output, operations)
+}
+
+func BuildPipelines(config map[string]PipelineConfig) []*core.Pipeline {
+    pipelines := make([]*core.Pipeline, 0, len(config))
+    for name, config := range config {
+        pipelines = append(pipelines, BuildPipeline(name, config))
+    }
+
+    return pipelines
 }

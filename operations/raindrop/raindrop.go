@@ -2,12 +2,12 @@ package operations
 
 import (
     "math/rand"
-    "github.com/lucasb-eyer/go-colorful"
-    "image/color"
     "sync"
     "github.com/andir/lightsd/core"
+    "github.com/andir/lightsd/operations"
     "time"
     "reflect"
+    "github.com/lucasb-eyer/go-colorful"
 )
 
 type RaindropConfig struct {
@@ -30,7 +30,6 @@ type Raindrop struct {
     sync.RWMutex
 
     name   string
-    stripe core.LEDStripe
 
     HueMin float64 `mqtt:"hue_min"`
     HueMax float64 `mqtt:"hue_max"`
@@ -80,12 +79,8 @@ func (this *Raindrop) Name() string {
     return this.name
 }
 
-func (this *Raindrop) Stripe() core.LEDStripe {
-    return this.stripe
-}
-
-func (this *Raindrop) Update(duration time.Duration) {
-    for _, l := range this.leds {
+func (this *Raindrop) Render(context *core.RenderContext) {
+    for i, l := range this.leds {
         roll := randomFloat64(this.rand, 0.0, 1.0)
 
         if roll > this.Chance {
@@ -103,25 +98,20 @@ func (this *Raindrop) Update(duration time.Duration) {
         h, s, v := l.Color.Hsv()
         v *= float64(factor)
         l.Color = colorful.Hsv(h, s, v)
-    }
-}
 
-func (this *Raindrop) Render() {
-    for i, l := range this.leds {
         r, g, b := l.Color.RGB255()
-        this.stripe[i] = color.RGBA{R: r, G: g, B: b, A: 0}
+        context.Set(i, r, g, b)
     }
 }
 
 func init() {
-    core.RegisterOperation("raindrops", core.OperationFactory{
+    operations.Register("raindrops", &operations.Factory{
         ConfigType: reflect.TypeOf(RaindropConfig{}),
-        Create: func(pipeline *core.Pipeline, name string, count int, rconfig interface{}) (core.Operation, error) {
+        Create: func(name string, count int, rconfig interface{}) (core.Operation, error) {
             config := rconfig.(*RaindropConfig)
 
             return &Raindrop{
                 name:   name,
-                stripe: core.NewLEDStripe(count),
 
                 HueMin: config.HueMin,
                 HueMax: config.HueMax,

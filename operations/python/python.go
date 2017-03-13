@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/sbinet/go-python"
 	"log"
+	"github.com/sbinet/go-python"
 )
 
 func initialize() {

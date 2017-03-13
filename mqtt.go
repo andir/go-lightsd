@@ -1,100 +1,111 @@
 package main
 
 import (
-	MQTT "github.com/eclipse/paho.mqtt.golang"
-	"reflect"
-	"log"
-	"fmt"
-	"strconv"
-	"github.com/andir/lightsd/core"
+    "github.com/andir/lightsd/core"
+    MQTT "github.com/eclipse/paho.mqtt.golang"
+    "reflect"
+    "log"
+    "fmt"
+    "strconv"
 )
 
+type MqttConnection struct {
+    client MQTT.Client
+    realm string
+}
 
-func NewMqttConnection(config *Config, pipeline *core.Pipeline) {
-	opts := MQTT.NewClientOptions()
-	opts.AddBroker(fmt.Sprintf("tcp://%s:%d/", config.MQTT.Host, config.MQTT.Port))
-	opts.SetClientID(config.MQTT.ClientID)
+func NewMqttConnection(config *Config) *MqttConnection {
+    opts := MQTT.NewClientOptions()
+    opts.AddBroker(fmt.Sprintf("tcp://%s:%d/", config.MQTT.Host, config.MQTT.Port))
+    opts.SetClientID(config.MQTT.ClientID)
 
-	client := MQTT.NewClient(opts)
+    client := MQTT.NewClient(opts)
 
-	if token :=client.Connect(); token.Wait() && token.Error() != nil {
-		panic(token.Error())
-	}
+    if token := client.Connect(); token.Wait() && token.Error() != nil {
+        panic(token.Error())
+    }
 
-	for _, op := range pipeline.Operations() {
-		v := reflect.ValueOf(op).Elem()
-		t := v.Type()
+    return &MqttConnection{
+        client: client,
+        realm: config.MQTT.Realm,
+    }
+}
 
-		for i:= 0; i < t.NumField(); i++ {
-			fieldType := t.Field(i)
-			fieldValue := v.Field(i)
+func (this *MqttConnection) Register(pipeline *core.Pipeline) {
+    for _, processor := range pipeline.Processors() {
+        v := reflect.ValueOf(processor.Operation()).Elem()
+        t := v.Type()
 
-			tag, found := fieldType.Tag.Lookup("mqtt")
-			if !found {
-				continue
-			}
+        for i := 0; i < t.NumField(); i++ {
+            fieldType := t.Field(i)
+            fieldValue := v.Field(i)
 
-			topic := fmt.Sprintf("%s/%s/%s/set", config.MQTT.Realm, op.Name(), tag)
+            tag, found := fieldType.Tag.Lookup("mqtt")
+            if !found {
+                continue
+            }
 
-			var parse func(s string) (reflect.Value, error)
+            topic := fmt.Sprintf("%s/%s/%s/%s/set", this.realm, pipeline.Name(), processor.Name(), tag)
 
-			switch k := fieldType.Type.Kind(); k {
-			case reflect.Float64:
-				parse = func(s string) (reflect.Value, error) {
-					val, err := strconv.ParseFloat(s, 64)
-					if err != nil {
-						return reflect.ValueOf(nil), err
-					}
+            var parse func(s string) (reflect.Value, error)
 
-					return reflect.ValueOf(val), nil
-				}
+            switch k := fieldType.Type.Kind(); k {
+            case reflect.Float64:
+                parse = func(s string) (reflect.Value, error) {
+                    val, err := strconv.ParseFloat(s, 64)
+                    if err != nil {
+                        return reflect.ValueOf(nil), err
+                    }
 
-			case reflect.Int:
-				parse = func(s string) (reflect.Value, error) {
-					val, err := strconv.ParseInt(s, 10, 64)
-					if err != nil {
-						return reflect.ValueOf(nil), err
-					}
+                    return reflect.ValueOf(val), nil
+                }
 
-					return reflect.ValueOf(val), nil
-				}
+            case reflect.Int:
+                parse = func(s string) (reflect.Value, error) {
+                    val, err := strconv.ParseInt(s, 10, 64)
+                    if err != nil {
+                        return reflect.ValueOf(nil), err
+                    }
 
-			case reflect.Bool:
-				parse = func(s string) (reflect.Value, error) {
-					val, err := strconv.ParseBool(s)
-					if err != nil {
-						return reflect.ValueOf(nil), err
-					}
+                    return reflect.ValueOf(val), nil
+                }
 
-					return reflect.ValueOf(val), nil
-				}
+            case reflect.Bool:
+                parse = func(s string) (reflect.Value, error) {
+                    val, err := strconv.ParseBool(s)
+                    if err != nil {
+                        return reflect.ValueOf(nil), err
+                    }
 
-			case reflect.String:
-				parse = func(s string) (reflect.Value, error) {
-					return reflect.ValueOf(s), nil
-				}
+                    return reflect.ValueOf(val), nil
+                }
 
-			default:
-				log.Fatalf("Unsupported type: %v", k)
-			}
+            case reflect.String:
+                parse = func(s string) (reflect.Value, error) {
+                    return reflect.ValueOf(s), nil
+                }
 
-			log.Printf("Found MQTT exported parameter: %s:%s(%s) as %s", t.Name(), fieldType.Name, fieldType.Type.Name(), topic)
+            default:
+                log.Fatalf("Unsupported type: %v", k)
+            }
 
-			if t := client.Subscribe(topic, 0, func(c MQTT.Client, m MQTT.Message) {
-				val, err := parse(string(m.Payload()))
-				if err != nil {
-					log.Printf("Failed to parse: %s: %v", m.Payload(), err)
-					return
-				}
+            log.Printf("Found MQTT exported parameter: %s:%s(%s) as %s", t.Name(), fieldType.Name, fieldType.Type.Name(), topic)
 
-				log.Printf("Setting fieldValue: %s:%s(%s) = %v", t.Name(), fieldType.Name, fieldType.Type.Name(), val)
-				op.Lock()
-				defer op.Unlock()
-				fieldValue.Set(val)
-			}); t.Wait() && t.Error() != nil {
-				log.Fatal(t.Error())
-			}
-		}
-	}
+            if t := this.client.Subscribe(topic, 0, func(c MQTT.Client, m MQTT.Message) {
+                val, err := parse(string(m.Payload()))
+                if err != nil {
+                    log.Printf("Failed to parse: %s: %v", m.Payload(), err)
+                    return
+                }
+
+                log.Printf("Setting fieldValue: %s:%s(%s) = %v", t.Name(), fieldType.Name, fieldType.Type.Name(), val)
+                processor.Lock()
+                defer processor.Unlock()
+                fieldValue.Set(val)
+            }); t.Wait() && t.Error() != nil {
+                log.Fatal(t.Error())
+            }
+        }
+    }
 
 }

@@ -1,15 +1,11 @@
 
-function init()
-    offset = 0
-end
+offset = 0
 
-function update(duration)
-    offset = offset + duration * 10
-end
+function render(ctx)
+    offset = offset + ctx.duration * 10
 
-function render()
-    for i = 0, count - 1 do
-        put((i + offset) % count,
+    for i = 0, ctx.count - 1 do
+        ctx.put((i + offset) % ctx.count,
             i / count * 255,
             i / count * 255,
             i / count * 255)

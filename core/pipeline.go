@@ -1,104 +1,100 @@
 package core
 
 import (
-    "fmt"
-    "reflect"
-    "sync"
-    "github.com/mitchellh/mapstructure"
     "time"
 )
 
-type Operation interface {
-    sync.Locker
+type Processor struct {
+    operation Operation
+    stripe    LEDStripe
+}
 
-    Name() string
-    Stripe() LEDStripe
+func (this *Processor) Name() string {
+    return this.operation.Name()
+}
 
-    Update(duration time.Duration)
-    Render()
+func (this *Processor) Lock() {
+    this.operation.Lock()
+}
+
+func (this *Processor) Unlock() {
+    this.operation.Unlock()
+}
+
+func (this *Processor) Operation() Operation {
+    return this.operation
+}
+
+func (this *Processor) Stripe() LEDStripe {
+    return this.stripe
 }
 
 type Pipeline struct {
-    operations []Operation
+    name string
+
+    count int
+
+    output     Output
+    operations []Processor
 
     lastRendered time.Time
 }
 
-func NewPipeline() *Pipeline {
+func NewPipeline(name string, count int, output Output, processors []Operation) *Pipeline {
+    operations := make([]Processor, len(processors))
+    for i, processor := range processors {
+        operations[i] = Processor{
+            operation: processor,
+            stripe:    NewLEDStripe(count),
+        }
+    }
+
     return &Pipeline{
-        operations: make([]Operation, 0),
+        name: name,
+
+        count: count,
+
+        output:     output,
+        operations: operations,
+
         lastRendered: time.Now(),
     }
 }
 
-func (p *Pipeline) Operations() []Operation {
+func (p *Pipeline) Name() string {
+    return p.name
+}
+
+func (p *Pipeline) Count() int {
+    return p.count
+}
+
+func (p *Pipeline) Output() Output {
+    return p.output
+}
+
+func (p *Pipeline) Processors() []Processor {
     return p.operations
 }
 
-func (p *Pipeline) ByName(name string) Operation {
+func (p *Pipeline) ByName(name string) *Processor {
     for _, op := range p.operations {
-        if op.Name() == name {
-            return op
+        if op.operation.Name() == name {
+            return &op
         }
     }
 
     return nil
 }
 
-func (p *Pipeline) Result() LEDStripe {
-    return p.operations[len(p.operations) - 1].Stripe()
-}
-
-func (p *Pipeline) Render() time.Duration {
-    now := time.Now()
-
-    duration := now.Sub(p.lastRendered)
-
+func (p *Pipeline) Render(duration time.Duration) {
     for _, op := range p.operations {
-        op.Lock()
-        op.Update(duration)
-        op.Unlock()
-        op.Render()
+        op.operation.Lock()
+        op.operation.Render(&RenderContext{
+            Duration: duration,
+            Stripe:   op.stripe,
+            Pipeline: p,
+        })
+        op.operation.Unlock()
     }
-
-    p.lastRendered = now
-
-    return duration
-}
-
-type OperationFactory struct {
-    ConfigType reflect.Type
-
-    Create func(pipeline *Pipeline, name string, count int, config interface{}) (Operation, error)
-}
-
-var operationFactories = make(map[string]OperationFactory)
-
-func RegisterOperation(t string, factory OperationFactory) {
-    if _, found := operationFactories[t]; found {
-        panic(fmt.Errorf("Duplicated operation type: %s", t))
-    }
-
-    operationFactories[t] = factory
-}
-
-func (p *Pipeline) NewOperation(t string, name string, count int, config map[string]interface{}) {
-    f, found := operationFactories[t]
-    if !found {
-        panic(fmt.Errorf("Unknown operation type: %s", t))
-    }
-
-    s := reflect.New(f.ConfigType).Interface()
-
-    err := mapstructure.Decode(config, s)
-    if err != nil {
-        panic(err)
-    }
-
-    op, err := f.Create(p, name, count, s)
-    if err != nil {
-        panic(err)
-    }
-
-    p.operations = append(p.operations, op)
 }

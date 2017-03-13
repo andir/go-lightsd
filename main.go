@@ -3,14 +3,15 @@ package main
 import (
     "flag"
     "time"
-    
-    "github.com/andir/lightsd/core"
-    _ "github.com/andir/lightsd/operations"
-    "github.com/andir/lightsd/outputs/shm"
     "runtime/pprof"
     "os"
     "fmt"
     "os/signal"
+    _ "github.com/andir/lightsd/operations/lua"
+    _ "github.com/andir/lightsd/operations/rainbow"
+    _ "github.com/andir/lightsd/operations/raindrop"
+    _ "github.com/andir/lightsd/operations/rotation"
+    _ "github.com/andir/lightsd/outputs/shm"
 )
 
 func main() {
@@ -36,36 +37,38 @@ func main() {
         panic(err)
     }
 
-    pipeline := core.NewPipeline()
+    pipelines := BuildPipelines(config.Pipelines)
 
-    for _, op := range config.Operations {
-        pipeline.NewOperation(op.Type, op.Name, config.Size, op.Config)
+    mqtt := NewMqttConnection(config)
+    for _, pipeline := range pipelines {
+        mqtt.Register(pipeline)
     }
 
-    //NewMqttConnection(config, pipeline)
-
     bc := StartDebug()
-    sink := shm.NewSHMOutput("/test", config.Size)
-
-    interval := time.Second / time.Duration(config.FPS)
 
     go func() {
+        interval := time.Second / time.Duration(config.FPS)
+        lastTime := time.Now()
         for {
-            elapsed := pipeline.Render()
+            currTime := time.Now()
+            duration := currTime.Sub(lastTime)
 
-            result := pipeline.Result()
+            for _, pipeline := range pipelines {
+                pipeline.Render(duration)
+            }
 
-            sink.Render(result)
-            bc.Broadcast(result)
+            bc.Broadcast(pipelines[0])
 
-            diff := interval - elapsed
-            time.Sleep(diff)
+            // Wait until next frame should start
+            time.Sleep(lastTime.Add(interval).Sub(time.Now()))
+
+            lastTime = currTime
         }
     }()
 
     signalChan := make(chan os.Signal, 1)
     signal.Notify(signalChan, os.Interrupt)
-    for _ = range signalChan {
+    for range signalChan {
         fmt.Println("Interrupt received. Stopping")
         return
     }

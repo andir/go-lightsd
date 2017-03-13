@@ -1,13 +1,12 @@
 package main
 
 import (
-    "image/color"
+    "github.com/andir/lightsd/core"
     "log"
     "net/http"
     "golang.org/x/net/websocket"
     "sync"
     "fmt"
-    _ "github.com/andir/lightsd/operations"
 )
 
 func CreateStreamHandler(broadcaster *WebsocketBroadcaster) websocket.Handler {
@@ -49,10 +48,12 @@ func (b *WebsocketBroadcaster) Remove(ws *websocket.Conn) {
     }
 }
 
-func (b *WebsocketBroadcaster) Broadcast(l []color.RGBA) {
-    msg := make([]byte, len(l)*3)
+func (b *WebsocketBroadcaster) Broadcast(pipeline *core.Pipeline) {
+    msg := make([]byte, pipeline.Count()*3)
 
-    for i, p := range l {
+    stripe := pipeline.Processors()[len(pipeline.Processors()) - 1].Stripe()
+
+    for i, p := range stripe {
         msg[i*3+0] = byte(p.R)
         msg[i*3+1] = byte(p.G)
         msg[i*3+2] = byte(p.B)
