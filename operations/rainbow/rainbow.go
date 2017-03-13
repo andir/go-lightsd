@@ -2,8 +2,8 @@ package operations
 
 import (
     "sync"
-    "../../core"
-    "../../utils"
+    "github.com/andir/lightsd/core"
+    "github.com/andir/lightsd/utils"
     "reflect"
     "time"
 )

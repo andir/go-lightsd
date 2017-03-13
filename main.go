@@ -1,11 +1,12 @@
 package main
 
 import (
-    "time"
     "flag"
-    "./core"
-    "./outputs/shm"
-    _ "./operations"
+    "time"
+    
+    "github.com/andir/lightsd/core"
+    _ "github.com/andir/lightsd/operations"
+    "github.com/andir/lightsd/outputs/shm"
 )
 
 func main() {

@@ -3,7 +3,7 @@ package operations
 import (
     "time"
     "sync"
-    "../../core"
+    "github.com/andir/lightsd/core"
     "reflect"
     "fmt"
 )

@@ -1,8 +1,8 @@
 package operations
 
 import (
-    _ "./lua"
-    _ "./rainbow"
-    _ "./raindrop"
-    _ "./rotation"
+    _ "github.com/andir/lightsd/operations/lua"
+    _ "github.com/andir/lightsd/operations/rainbow"
+    _ "github.com/andir/lightsd/operations/raindrop"
+    _ "github.com/andir/lightsd/operations/rotation"
 )

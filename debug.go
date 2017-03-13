@@ -7,7 +7,7 @@ import (
     "golang.org/x/net/websocket"
     "sync"
     "fmt"
-    _ "./operations"
+    _ "github.com/andir/lightsd/operations"
 )
 
 func CreateStreamHandler(broadcaster *WebsocketBroadcaster) websocket.Handler {

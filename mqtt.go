@@ -6,7 +6,7 @@ import (
 	"log"
 	"fmt"
 	"strconv"
-	"./core"
+	"github.com/andir/lightsd/core"
 )
 
 

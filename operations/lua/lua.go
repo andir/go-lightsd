@@ -1,7 +1,7 @@
 package lua
 
 import (
-    "../../core"
+    "github.com/andir/lightsd/core"
     lua "github.com/yuin/gopher-lua"
     "reflect"
     "sync"

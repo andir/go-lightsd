@@ -3,6 +3,9 @@
         "github.com/eclipse/paho.mqtt.golang": {
             "branch": "master"
         },
+        "github.com/fabiokung/shm": {
+            "branch": "master"
+        },
         "github.com/lucasb-eyer/go-colorful": {
             "branch": "master"
         },
@@ -11,6 +14,9 @@
         },
         "golang.org/x/net": {
             "branch": "master"
+        },
+        "gopkg.in/yaml.v2": {
+            "branch": "v2"
         }
     }
 }

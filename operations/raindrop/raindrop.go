@@ -5,7 +5,7 @@ import (
     "github.com/lucasb-eyer/go-colorful"
     "image/color"
     "sync"
-    "../../core"
+    "github.com/andir/lightsd/core"
     "time"
     "reflect"
 )
