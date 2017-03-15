@@ -5,7 +5,7 @@ mqtt:
   port: 1883
 
   clientid: lightsd
-  realm: maglab/space/lights
+  realm: lights
 
 debug:
   enable: true
@@ -14,45 +14,40 @@ debug:
 pipelines:
   leds:
     count: 1200
-    output:
-      type: shm
-      config:
-        file: leds
-
     operations:
       - name: rainbow
         type: rainbow
         config:
           gradient:
-            "#ff0000": 0.0
-            "#d52a00": 0.066
-            "#ab5500": 0.132
-            "#ab7f00": 0.198
-            "#abab00": 0.264
-            "#56d500": 0.330
-            "#00ff00": 0.396
-            "#00d52a": 0.462
-            "#00AB55": 0.528
-            "#0056AA": 0.594
-            "#0000ff": 0.660
-            "#2a00d5": 0.726
-            "#5500ab": 0.792
-            "#7f0081": 0.858
-            "#ab0055": 0.924
-            "#ff0000": 1.000
+            - {c: "#ff0000", p: 0.000}
+            - {c: "#d52a00", p: 0.066}
+            - {c: "#ab5500", p: 0.132}
+            - {c: "#ab7f00", p: 0.198}
+            - {c: "#abab00", p: 0.264}
+            - {c: "#56d500", p: 0.330}
+            - {c: "#00ff00", p: 0.396}
+            - {c: "#00d52a", p: 0.462}
+            - {c: "#00AB55", p: 0.528}
+            - {c: "#0056AA", p: 0.594}
+            - {c: "#0000ff", p: 0.660}
+            - {c: "#2a00d5", p: 0.726}
+            - {c: "#5500ab", p: 0.792}
+            - {c: "#7f0081", p: 0.858}
+            - {c: "#ab0055", p: 0.924}
+            - {c: "#ff0000", p: 1.000}
       - name: rotation
         type: rotation
         config:
           speed: 30.0
           source: rainbow
+    output:
+      type: shm
+      operation: rotation
+      config:
+        file: leds
 
   dots:
     count: 100
-    output:
-      type: shm
-      config:
-        file: ledsx
-
     operations:
       - name: raindrops
         type: raindrops
@@ -70,3 +65,8 @@ pipelines:
 #        type: lua
 #        config:
 #          file: example/test.lua
+    output:
+      type: shm
+      operation: raindrops
+      config:
+        file: ledsx

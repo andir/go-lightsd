@@ -17,6 +17,7 @@ type LuaScript struct {
     sync.RWMutex
 
     name string
+    stripe core.LEDStripe
 
     state *lua.LState
     fn    lua.LValue
@@ -26,13 +27,15 @@ func (this *LuaScript) Name() string {
     return this.name
 }
 
-func (this *LuaScript) Render(context *core.RenderContext) {
+func (this *LuaScript) Render(context *core.RenderContext) core.LEDStripeReader {
     if err := this.state.CallByParam(lua.P{
         Fn:      this.fn,
         Protect: true,
     }); err != nil {
         fmt.Printf("Error in script / render: %v", err)
     }
+
+    return this.stripe
 }
 
 func init() {
@@ -62,6 +65,7 @@ func init() {
 
             return &LuaScript{
                 name:   name,
+                stripe: core.NewLEDStripe(count),
 
                 state: state,
                 fn: fn,

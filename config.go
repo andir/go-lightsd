@@ -12,13 +12,16 @@ import (
 )
 
 type OperationConfig struct {
-    Name   string
-    Type   string
+    Name string
+    Type string
+
     Config map[string]interface{}
 }
 
 type OutputConfig struct {
-    Type   string
+    Type      string
+    Operation string
+
     Config map[string]interface{}
 }
 
@@ -76,7 +79,7 @@ func BuildOutput(config PipelineConfig) core.Output {
         panic(err)
     }
 
-    output, err := f.Create(config.Count, c)
+    output, err := f.Create(config.Count, config.Output.Operation, c)
     if err != nil {
         panic(err)
     }

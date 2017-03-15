@@ -1,9 +1,9 @@
 package operations
 
 import (
-    "sync"
     "github.com/andir/lightsd/core"
     "github.com/andir/lightsd/operations"
+    "sync"
     "reflect"
 )
 
@@ -23,17 +23,33 @@ type Rotation struct {
     offset float64
 }
 
+type rotatedLEDStripeReader struct {
+    source core.LEDStripeReader
+    offset float64
+}
+
+func (this *rotatedLEDStripeReader) Count() int {
+    return this.source.Count()
+}
+
+func(this *rotatedLEDStripeReader) Get(i int) (r, g, b uint8) {
+    // TODO: Blending between colors?
+    return this.source.Get((i+int(this.offset))%this.source.Count())
+}
+
 func (this *Rotation) Name() string {
     return this.name
 }
 
-func (this *Rotation) Render(context *core.RenderContext) {
+func (this *Rotation) Render(context *core.RenderContext) core.LEDStripeReader {
     this.offset += context.Duration.Seconds() * this.PixelPerSecond
 
     // TODO: Ouch, this hurts
-    source := context.Pipeline.ByName(this.Source)
-    for i, s := range source.Stripe() {
-        context.Stripe[(i+int(this.offset))%context.Count()] = s
+    source := context.Results[this.Source]
+
+    return &rotatedLEDStripeReader{
+        source: source,
+        offset: this.offset,
     }
 }
 

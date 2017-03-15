@@ -6,22 +6,10 @@ import (
 )
 
 type RenderContext struct {
+    Count int
     Duration time.Duration
 
-    Stripe LEDStripe
-
-    Pipeline *Pipeline
-}
-
-func (this *RenderContext) Count() int {
-    return len(this.Stripe)
-}
-
-func (this *RenderContext) Set(i int, r uint8, g uint8, b uint8) {
-    this.Stripe[i].R = r
-    this.Stripe[i].G = g
-    this.Stripe[i].B = b
-    this.Stripe[i].A = 0
+    Results map[string]LEDStripeReader
 }
 
 type Operation interface {
@@ -29,5 +17,5 @@ type Operation interface {
 
     Name() string
 
-    Render(context *RenderContext)
+    Render(context *RenderContext) LEDStripeReader
 }

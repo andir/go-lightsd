@@ -1,5 +1,6 @@
 package core
 
 type Output interface {
-    Render(stripe LEDStripe)
+    Source() string
+    Render(stripe LEDStripeReader)
 }

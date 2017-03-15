@@ -12,6 +12,7 @@ import (
     _ "github.com/andir/lightsd/operations/raindrop"
     _ "github.com/andir/lightsd/operations/rotation"
     _ "github.com/andir/lightsd/outputs/shm"
+    "github.com/andir/lightsd/core"
 )
 
 func main() {
@@ -53,11 +54,16 @@ func main() {
             currTime := time.Now()
             duration := currTime.Sub(lastTime)
 
-            for _, pipeline := range pipelines {
-                pipeline.Render(duration)
+            var context *core.RenderContext = nil
+            for i, pipeline := range pipelines {
+                if i == 0 {
+                    context = pipeline.Render(duration)
+                } else {
+                    pipeline.Render(duration)
+                }
             }
 
-            bc.Broadcast(pipelines[0])
+            bc.Broadcast(pipelines[0], context)
 
             // Wait until next frame should start
             time.Sleep(lastTime.Add(interval).Sub(time.Now()))

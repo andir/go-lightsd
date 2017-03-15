@@ -48,6 +48,8 @@ type Raindrop struct {
     rand *rand.Rand
 
     leds []RaindropLED
+
+    stripe core.LEDStripe
 }
 
 type RaindropLED struct {
@@ -79,7 +81,7 @@ func (this *Raindrop) Name() string {
     return this.name
 }
 
-func (this *Raindrop) Render(context *core.RenderContext) {
+func (this *Raindrop) Render(context *core.RenderContext) core.LEDStripeReader {
     for i, l := range this.leds {
         roll := randomFloat64(this.rand, 0.0, 1.0)
 
@@ -100,8 +102,10 @@ func (this *Raindrop) Render(context *core.RenderContext) {
         l.Color = colorful.Hsv(h, s, v)
 
         r, g, b := l.Color.RGB255()
-        context.Set(i, r, g, b)
+        this.stripe.Set(i, r, g, b)
     }
+
+    return this.stripe
 }
 
 func init() {
@@ -129,6 +133,8 @@ func init() {
 
                 rand: rand.New(rand.NewSource(time.Now().Unix())),
                 leds: make([]RaindropLED, count),
+
+                stripe: core.NewLEDStripe(count),
             }, nil
         },
     })

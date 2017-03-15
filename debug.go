@@ -48,15 +48,13 @@ func (b *WebsocketBroadcaster) Remove(ws *websocket.Conn) {
     }
 }
 
-func (b *WebsocketBroadcaster) Broadcast(pipeline *core.Pipeline) {
+func (b *WebsocketBroadcaster) Broadcast(pipeline *core.Pipeline, context *core.RenderContext) {
     msg := make([]byte, pipeline.Count()*3)
 
-    stripe := pipeline.Processors()[len(pipeline.Processors()) - 1].Stripe()
+    stripe := context.Results[pipeline.Output().Source()]
 
-    for i, p := range stripe {
-        msg[i*3+0] = byte(p.R)
-        msg[i*3+1] = byte(p.G)
-        msg[i*3+2] = byte(p.B)
+    for i := 0; i < stripe.Count(); i++ {
+        msg[i*3+0], msg[i*3+1], msg[i*3+2] = stripe.Get(i)
     }
 
     for _, c := range b.clients {

@@ -32,8 +32,8 @@ func NewMqttConnection(config *Config) *MqttConnection {
 }
 
 func (this *MqttConnection) Register(pipeline *core.Pipeline) {
-    for _, processor := range pipeline.Processors() {
-        v := reflect.ValueOf(processor.Operation()).Elem()
+    for _, operation := range pipeline.Operations() {
+        v := reflect.ValueOf(operation).Elem()
         t := v.Type()
 
         for i := 0; i < t.NumField(); i++ {
@@ -45,7 +45,7 @@ func (this *MqttConnection) Register(pipeline *core.Pipeline) {
                 continue
             }
 
-            topic := fmt.Sprintf("%s/%s/%s/%s/set", this.realm, pipeline.Name(), processor.Name(), tag)
+            topic := fmt.Sprintf("%s/%s/%s/%s/set", this.realm, pipeline.Name(), operation.Name(), tag)
 
             var parse func(s string) (reflect.Value, error)
 
@@ -99,8 +99,8 @@ func (this *MqttConnection) Register(pipeline *core.Pipeline) {
                 }
 
                 log.Printf("Setting fieldValue: %s:%s(%s) = %v", t.Name(), fieldType.Name, fieldType.Type.Name(), val)
-                processor.Lock()
-                defer processor.Unlock()
+                operation.Lock()
+                defer operation.Unlock()
                 fieldValue.Set(val)
             }); t.Wait() && t.Error() != nil {
                 log.Fatal(t.Error())

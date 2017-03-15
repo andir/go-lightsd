@@ -9,7 +9,7 @@ import (
 type Factory struct {
     ConfigType reflect.Type
 
-    Create func(count int, config interface{}) (core.Output, error)
+    Create func(count int, operation string, config interface{}) (core.Output, error)
 }
 
 var factories = make(map[string]*Factory)
