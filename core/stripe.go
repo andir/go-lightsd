@@ -15,11 +15,6 @@ type LEDStripeReader interface {
     Get(i int) (r, g, b uint8)
 }
 
-type LEDStripeWriter interface {
-    Count() int
-    Set(i int, r, g, b uint8)
-}
-
 func (this LEDStripe) Count() int {
     return len(this)
 }
