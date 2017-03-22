@@ -13,6 +13,7 @@ type Pipeline struct {
     Output     Output
 
     lastRendered time.Time
+    results map[string]LEDStripeReader
 }
 
 func NewPipeline(name string, count int, output Output, operations []Operation) *Pipeline {
@@ -25,6 +26,7 @@ func NewPipeline(name string, count int, output Output, operations []Operation) 
         Output:     output,
 
         lastRendered: time.Now(),
+        results:make(map[string]LEDStripeReader, len(operations)),
     }
 }
 
@@ -32,7 +34,7 @@ func (p *Pipeline) Render(duration time.Duration) *RenderContext {
     context := &RenderContext{
         Pipeline: p,
         Duration: duration,
-        Results: make(map[string]LEDStripeReader, len(p.Operations)),
+        Results: p.results,
     }
 
     for _, op := range p.Operations {
