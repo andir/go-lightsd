@@ -32,7 +32,7 @@ func NewMqttConnection(config *Config) *MqttConnection {
 }
 
 func (this *MqttConnection) Register(pipeline *core.Pipeline) {
-    for _, operation := range pipeline.Operations() {
+    for _, operation := range pipeline.Operations {
         v := reflect.ValueOf(operation).Elem()
         t := v.Type()
 
@@ -45,7 +45,7 @@ func (this *MqttConnection) Register(pipeline *core.Pipeline) {
                 continue
             }
 
-            topic := fmt.Sprintf("%s/%s/%s/%s/set", this.realm, pipeline.Name(), operation.Name(), tag)
+            topic := fmt.Sprintf("%s/%s/%s/%s/set", this.realm, pipeline.Name, operation.Name(), tag)
 
             var parse func(s string) (reflect.Value, error)
 

@@ -12,7 +12,7 @@ import (
     _ "github.com/andir/lightsd/operations/raindrop"
     _ "github.com/andir/lightsd/operations/rotation"
     _ "github.com/andir/lightsd/outputs/shm"
-    "github.com/andir/lightsd/core"
+    "github.com/andir/lightsd/debug"
 )
 
 func main() {
@@ -45,7 +45,10 @@ func main() {
         mqtt.Register(pipeline)
     }
 
-    bc := StartDebug()
+    var debugger *debug.Debugger = nil
+    if config.Debug.Enable {
+        debugger = debug.StartDebug(config.Debug.Port, pipelines)
+    }
 
     go func() {
         interval := time.Second / time.Duration(config.FPS)
@@ -54,16 +57,13 @@ func main() {
             currTime := time.Now()
             duration := currTime.Sub(lastTime)
 
-            var context *core.RenderContext = nil
-            for i, pipeline := range pipelines {
-                if i == 0 {
-                    context = pipeline.Render(duration)
-                } else {
-                    pipeline.Render(duration)
+            for _, pipeline := range pipelines {
+                context := pipeline.Render(duration)
+
+                if debugger != nil {
+                    debugger.Broadcast(context)
                 }
             }
-
-            bc.Broadcast(pipelines[0], context)
 
             // Wait until next frame should start
             time.Sleep(lastTime.Add(interval).Sub(time.Now()))

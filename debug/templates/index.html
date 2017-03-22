@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+<ul>
+    {{ range . }}
+    <li><a href="/pipeline/{{ .Name }}">{{ .Name }}</a></li>
+    {{ end }}
+</ul>
+</body>
+</html>

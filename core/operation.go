@@ -6,7 +6,8 @@ import (
 )
 
 type RenderContext struct {
-    Count int
+    Pipeline *Pipeline
+
     Duration time.Duration
 
     Results map[string]LEDStripeReader
@@ -18,4 +19,8 @@ type Operation interface {
     Name() string
 
     Render(context *RenderContext) LEDStripeReader
+}
+
+func (this *RenderContext) Count() int {
+    return this.Pipeline.Count
 }

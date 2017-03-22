@@ -5,63 +5,37 @@ import (
 )
 
 type Pipeline struct {
-    name string
+    Name string
 
-    count int
+    Count int
 
-    operations []Operation
-    output     Output
+    Operations []Operation
+    Output     Output
 
     lastRendered time.Time
 }
 
 func NewPipeline(name string, count int, output Output, operations []Operation) *Pipeline {
     return &Pipeline{
-        name: name,
+        Name: name,
 
-        count: count,
+        Count: count,
 
-        operations: operations,
-        output:     output,
+        Operations: operations,
+        Output:     output,
 
         lastRendered: time.Now(),
     }
 }
 
-func (p *Pipeline) Name() string {
-    return p.name
-}
-
-func (p *Pipeline) Count() int {
-    return p.count
-}
-
-func (p *Pipeline) Output() Output {
-    return p.output
-}
-
-func (p *Pipeline) Operations() []Operation {
-    return p.operations
-}
-
-func (p *Pipeline) ByName(name string) *Operation {
-    for _, op := range p.operations {
-        if op.Name() == name {
-            return &op
-        }
-    }
-
-    return nil
-}
-
 func (p *Pipeline) Render(duration time.Duration) *RenderContext {
     context := &RenderContext{
-        Count: p.count,
+        Pipeline: p,
         Duration: duration,
-        Results: make(map[string]LEDStripeReader, len(p.operations)),
+        Results: make(map[string]LEDStripeReader, len(p.Operations)),
     }
 
-    for _, op := range p.operations {
+    for _, op := range p.Operations {
         op.Lock()
 
         result := op.Render(context)
@@ -70,7 +44,7 @@ func (p *Pipeline) Render(duration time.Duration) *RenderContext {
         op.Unlock()
     }
 
-    p.output.Render(context.Results[p.output.Source()])
+    p.Output.Render(context.Results[p.Output.Source()])
 
     return context
 }
