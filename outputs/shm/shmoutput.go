@@ -5,11 +5,11 @@ import (
     "github.com/andir/lightsd/outputs"
     "unsafe"
     "os"
-    "fmt"
     "syscall"
     "runtime"
     "github.com/fabiokung/shm"
     "reflect"
+    "log"
 )
 
 type SHMOutputConfig struct {
@@ -27,13 +27,13 @@ type SHMOutput struct {
 func destroySHMOutput(s *SHMOutput) {
     if s.mmap != nil {
         if err := syscall.Munmap(s.mmap); err != nil {
-            fmt.Println("munmap:", err)
+            log.Println("shm: munmap failed:", err)
         }
     }
 
     if s.fh != nil {
         if err := s.fh.Close(); err != nil {
-            fmt.Println("close:", err)
+            log.Println("shm: close failed:", err)
         }
     }
     shm.Unlink(s.filename)

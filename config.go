@@ -64,62 +64,75 @@ func LoadConfig(path string) (*Config, error) {
         return nil, err
     }
 
-    out, err := yaml.Marshal(config)
-    fmt.Printf("Config: %s\n", out)
-
     return config, nil
 }
 
-func BuildOutput(config PipelineConfig) core.Output {
+func BuildOutput(config PipelineConfig) (core.Output, error) {
     f := outputs.Get(config.Output.Type)
 
     c := reflect.New(f.ConfigType).Interface()
     err := mapstructure.Decode(config.Output.Config, c)
     if err != nil {
-        panic(err)
+        return nil, fmt.Errorf("config: Unknown output type: %s", config.Output.Type)
     }
 
     output, err := f.Create(config.Count, config.Output.Operation, c)
     if err != nil {
-        panic(err)
+        return nil,fmt.Errorf("config: Failed to build output config: %v", err)
     }
 
-    return output
+    return output, nil
 }
 
-func BuildOperation(config PipelineConfig, i int) core.Operation {
+func BuildOperation(config PipelineConfig, i int) (core.Operation, error) {
     f := operations.Get(config.Operations[i].Type)
+    if f == nil {
+        return nil, fmt.Errorf("config: Unknown operation type: %s", config.Operations[i].Type)
+    }
 
     c := reflect.New(f.ConfigType).Interface()
     err := mapstructure.Decode(config.Operations[i].Config, c)
     if err != nil {
-        panic(err)
+        return nil,fmt.Errorf("config: Failed to build operation config: %s: %v", config.Operations[i].Name, err)
     }
 
     output, err := f.Create(config.Operations[i].Name, config.Count, c)
     if err != nil {
-        panic(err)
+        return nil,fmt.Errorf("config: Failed to create operation: %v", err)
     }
 
-    return output
+    return output, nil
 }
 
-func BuildPipeline(name string, config PipelineConfig) *core.Pipeline {
-    output := BuildOutput(config)
+func BuildPipeline(name string, config PipelineConfig) (*core.Pipeline, error) {
+    output, err := BuildOutput(config)
+    if err != nil {
+        return nil, err
+    }
 
     operations := make([]core.Operation, 0, len(config.Operations))
     for i := range config.Operations {
-        operations = append(operations, BuildOperation(config, i))
+        op, err := BuildOperation(config, i)
+        if err != nil {
+            return nil, err
+        }
+
+        operations = append(operations, op)
     }
 
-    return core.NewPipeline(name, config.Count, output, operations)
+    return core.NewPipeline(name, config.Count, output, operations), nil
 }
 
-func BuildPipelines(config map[string]PipelineConfig) []*core.Pipeline {
+func BuildPipelines(config map[string]PipelineConfig) ([]*core.Pipeline, error) {
     pipelines := make([]*core.Pipeline, 0, len(config))
     for name, config := range config {
-        pipelines = append(pipelines, BuildPipeline(name, config))
+        pipeline, err := BuildPipeline(name, config)
+        if err != nil {
+            return nil, err
+        }
+
+        pipelines = append(pipelines, pipeline)
     }
 
-    return pipelines
+    return pipelines, nil
 }

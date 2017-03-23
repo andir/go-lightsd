@@ -6,6 +6,8 @@ import (
     "github.com/andir/lightsd/operations"
     "reflect"
     "sync"
+    "github.com/lucasb-eyer/go-colorful"
+    "fmt"
 )
 
 type GradientConfig struct {
@@ -38,7 +40,12 @@ func init() {
 
             gradient := make(utils.GradientTable, len(config.Gradient))
             for i, e := range config.Gradient {
-                gradient[i].Col = utils.ParseColorHex(e.C)
+                color, err := colorful.Hex(e.C)
+                if err != nil {
+                    return nil, fmt.Errorf("gradient: failed to parse color: %v", err)
+                }
+
+                gradient[i].Col = color
                 gradient[i].Pos = e.P
             }
 

@@ -4,8 +4,9 @@ import (
     "github.com/andir/lightsd/core"
     "net/http"
     "golang.org/x/net/websocket"
-    "fmt"
     "html/template"
+    "log"
+    "io"
 )
 
 type Debugger struct {
@@ -20,7 +21,7 @@ func (this *Debugger) createIndexHandler() http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
         err := template.Execute(w, this.pipelines)
         if err != nil {
-            panic(fmt.Errorf("Failed to render template: index.html: %v", err))
+            log.Panicf("debugger: failed to render template: index.html: %v", err)
         }
     })
 }
@@ -41,7 +42,7 @@ func (this *Debugger) createPipelineHandler() http.Handler {
 
         err := template.Execute(w, pipeline)
         if err != nil {
-            panic(fmt.Errorf("Failed to render template: pipeline.html: %v", err))
+            log.Panic("debugger: failed to render template: pipeline.html:", err)
         }
     })
 }
@@ -55,10 +56,14 @@ func (this *Debugger) createStreamHandler() http.Handler {
         broadcaster.Add(ws)
         defer broadcaster.Remove(ws)
 
+        var msg string
         for {
-            var msg string
-            if err := websocket.Message.Receive(ws, &msg); err != nil {
-                fmt.Println("Recv error: ", err.Error())
+            err := websocket.Message.Receive(ws, &msg)
+            if err != nil {
+                if err != io.EOF {
+                    log.Print("debuger: recv error:", err.Error())
+                }
+
                 break
             }
         }
@@ -84,7 +89,7 @@ func StartDebug(port int, pipelines []*core.Pipeline) *Debugger {
     go func() {
         err := http.ListenAndServe(":9000", mux)
         if err != nil {
-            panic(fmt.Errorf("Failed to server debug interface: %v", err))
+            log.Panic("debugger: failed to listen:", err)
         }
     }()
 

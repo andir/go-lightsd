@@ -5,7 +5,6 @@ import (
     "time"
     "runtime/pprof"
     "os"
-    "fmt"
     "os/signal"
     _ "github.com/andir/lightsd/operations/gradient"
     _ "github.com/andir/lightsd/operations/raindrop"
@@ -14,6 +13,7 @@ import (
     _ "github.com/andir/lightsd/outputs/shm"
     "github.com/andir/lightsd/debug"
     "github.com/andir/lightsd/core"
+    "log"
 )
 
 func main() {
@@ -24,10 +24,10 @@ func main() {
 
     if *profileOutput != "" {
         fh, err := os.Create(*profileOutput)
-
         if err != nil {
             panic(err)
         }
+
         defer fh.Close()
 
         pprof.StartCPUProfile(fh)
@@ -39,11 +39,21 @@ func main() {
         panic(err)
     }
 
-    pipelines := BuildPipelines(config.Pipelines)
+    pipelines, err := BuildPipelines(config.Pipelines)
+    if err != nil {
+        panic(err)
+    }
 
-    mqtt := NewMqttConnection(config)
+    mqtt, err := NewMqttConnection(config)
+    if err != nil {
+        panic(err)
+    }
+
     for _, pipeline := range pipelines {
-        mqtt.Register(pipeline)
+        err = mqtt.Register(pipeline)
+        if err != nil {
+            panic(err)
+        }
     }
 
     var debugger *debug.Debugger = nil
@@ -77,7 +87,7 @@ func main() {
     signalChan := make(chan os.Signal, 1)
     signal.Notify(signalChan, os.Interrupt)
     for range signalChan {
-        fmt.Println("Interrupt received. Stopping")
+        log.Print("Interrupt received - stopping")
         return
     }
 }

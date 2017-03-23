@@ -14,7 +14,7 @@ type MqttConnection struct {
     realm string
 }
 
-func NewMqttConnection(config *Config) *MqttConnection {
+func NewMqttConnection(config *Config) (*MqttConnection, error) {
     opts := MQTT.NewClientOptions()
     opts.AddBroker(fmt.Sprintf("tcp://%s:%d/", config.MQTT.Host, config.MQTT.Port))
     opts.SetClientID(config.MQTT.ClientID)
@@ -22,16 +22,16 @@ func NewMqttConnection(config *Config) *MqttConnection {
     client := MQTT.NewClient(opts)
 
     if token := client.Connect(); token.Wait() && token.Error() != nil {
-        panic(token.Error())
+        return nil, token.Error()
     }
 
     return &MqttConnection{
         client: client,
         realm: config.MQTT.Realm,
-    }
+    }, nil
 }
 
-func (this *MqttConnection) Register(pipeline *core.Pipeline) {
+func (this *MqttConnection) Register(pipeline *core.Pipeline) error {
     for _, operation := range pipeline.Operations {
         v := reflect.ValueOf(operation).Elem()
         t := v.Type()
@@ -86,12 +86,12 @@ func (this *MqttConnection) Register(pipeline *core.Pipeline) {
                 }
 
             default:
-                log.Fatalf("Unsupported type: %v", k)
+                log.Panic("Unsupported type:", k)
             }
 
             log.Printf("Found MQTT exported parameter: %s:%s(%s) as %s", t.Name(), fieldType.Name, fieldType.Type.Name(), topic)
 
-            if t := this.client.Subscribe(topic, 0, func(c MQTT.Client, m MQTT.Message) {
+            handler := func(c MQTT.Client, m MQTT.Message) {
                 val, err := parse(string(m.Payload()))
                 if err != nil {
                     log.Printf("Failed to parse: %s: %v", m.Payload(), err)
@@ -99,13 +99,18 @@ func (this *MqttConnection) Register(pipeline *core.Pipeline) {
                 }
 
                 log.Printf("Setting fieldValue: %s:%s(%s) = %v", t.Name(), fieldType.Name, fieldType.Type.Name(), val)
+
                 operation.Lock()
                 defer operation.Unlock()
                 fieldValue.Set(val)
-            }); t.Wait() && t.Error() != nil {
-                log.Fatal(t.Error())
+
+            }
+
+            if t := this.client.Subscribe(topic, 0, handler); t.Wait() && t.Error() != nil {
+                return t.Error()
             }
         }
     }
 
+    return nil
 }
