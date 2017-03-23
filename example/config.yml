@@ -48,7 +48,7 @@ pipelines:
           to: 100
     output:
       type: shm
-      operation: blackout
+      source: blackout
       config:
         file: leds
 
@@ -73,6 +73,6 @@ pipelines:
 #          file: example/test.lua
     output:
       type: shm
-      operation: raindrops
+      source: raindrops
       config:
         file: ledsx

@@ -1,20 +1,46 @@
 package main
 
 import (
+    "log"
     "flag"
-    "time"
-    "runtime/pprof"
     "os"
     "os/signal"
+    "runtime/pprof"
+    "time"
     _ "github.com/andir/lightsd/operations/gradient"
     _ "github.com/andir/lightsd/operations/raindrop"
     _ "github.com/andir/lightsd/operations/rotation"
     _ "github.com/andir/lightsd/operations/blackout"
     _ "github.com/andir/lightsd/outputs/shm"
+    "github.com/andir/lightsd/operations"
+    "github.com/andir/lightsd/outputs"
     "github.com/andir/lightsd/debug"
     "github.com/andir/lightsd/core"
-    "log"
 )
+
+func buildPipelines(config map[string]PipelineConfig) ([]*core.Pipeline, error) {
+    pipelines := make([]*core.Pipeline, 0, len(config))
+    for name, config := range config {
+        out, err := outputs.Make(config.Output.Type, config.Count, config.Output.Source, config.Output.Config)
+        if err != nil {
+            return nil, err
+        }
+
+        ops := make([]core.Operation, 0, len(config.Operations))
+        for i := range config.Operations {
+            op, err := operations.Make(config.Operations[i].Type, config.Operations[i].Name, config.Count, config.Operations[i].Config)
+            if err != nil {
+                return nil, err
+            }
+
+            ops = append(ops, op)
+        }
+
+        pipelines = append(pipelines, core.NewPipeline(name, config.Count, out, ops))
+    }
+
+    return pipelines, nil
+}
 
 func main() {
     configPath := flag.String("config", "config.yml", "The config file")
@@ -39,7 +65,7 @@ func main() {
         panic(err)
     }
 
-    pipelines, err := BuildPipelines(config.Pipelines)
+    pipelines, err := buildPipelines(config.Pipelines)
     if err != nil {
         panic(err)
     }

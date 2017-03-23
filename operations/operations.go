@@ -4,6 +4,8 @@ import (
     "github.com/andir/lightsd/core"
     "reflect"
     "log"
+    "fmt"
+    "github.com/mitchellh/mapstructure"
 )
 
 type Factory struct {
@@ -22,11 +24,22 @@ func Register(t string, factory *Factory) {
     factories[t] = factory
 }
 
-func Get(t string) *Factory {
-    f, found := factories[t]
+func Make(t string, name string, count int, configData map[string]interface{}) (core.Operation, error) {
+    factory, found := factories[t]
     if !found {
-        return nil
+        return nil, fmt.Errorf("operations: Unknown type: %s", t)
     }
 
-    return f
+    config := reflect.New(factory.ConfigType).Interface()
+    err := mapstructure.Decode(configData, config)
+    if err != nil {
+        return nil, fmt.Errorf("operations: Failed to build config: %v", err)
+    }
+
+    operation, err := factory.Create(name, count, config)
+    if err != nil {
+        return nil, err
+    }
+
+    return operation, nil
 }
