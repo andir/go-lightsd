@@ -10,6 +10,7 @@ import (
     _ "github.com/andir/lightsd/operations/gradient"
     _ "github.com/andir/lightsd/operations/raindrop"
     _ "github.com/andir/lightsd/operations/rotation"
+    _ "github.com/andir/lightsd/operations/blackout"
     _ "github.com/andir/lightsd/outputs/shm"
     "github.com/andir/lightsd/debug"
     "github.com/andir/lightsd/core"

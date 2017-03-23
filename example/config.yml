@@ -40,9 +40,15 @@ pipelines:
         config:
           speed: 30.0
           source: rainbow
+      - name: blackout
+        type: blackout
+        config:
+          source: rotation
+          from: 500
+          to: 100
     output:
       type: shm
-      operation: rotation
+      operation: blackout
       config:
         file: leds
 
