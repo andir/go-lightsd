@@ -17,7 +17,7 @@ type Rotation struct {
 
     name string
 
-    Source         string
+    source         string
     PixelPerSecond float64  `mqtt:"speed"`
 
     offset float64
@@ -45,7 +45,7 @@ func (this *Rotation) Render(context *core.RenderContext) core.LEDStripeReader {
     this.offset += context.Duration.Seconds() * this.PixelPerSecond
 
     // TODO: Ouch, this hurts
-    source := context.Results[this.Source]
+    source := context.Results[this.source]
 
     return &rotatedLEDStripeReader{
         source: source,
@@ -59,15 +59,10 @@ func init() {
         Create: func(name string, count int, rconfig interface{}) (core.Operation, error) {
             config := rconfig.(*RotationConfig)
 
-            //source := pipeline.ByName(config.Source)
-            //if source == nil {
-            //    return nil, fmt.Errorf("Unknown source: %s", config.Source)
-            //}
-
             return &Rotation{
                 name: name,
 
-                Source:         config.Source,
+                source:         config.Source,
                 PixelPerSecond: config.PixelPerSecond,
 
                 offset: 0.0,

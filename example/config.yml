@@ -16,7 +16,7 @@ pipelines:
     count: 1200
     operations:
       - name: rainbow
-        type: rainbow
+        type: gradient
         config:
           gradient:
             - {c: "#ff0000", p: 0.000}

@@ -8,33 +8,33 @@ import (
     "sync"
 )
 
-type RainbowConfig struct {
+type GradientConfig struct {
     Gradient []struct {
         C string
         P float64
     }
 }
 
-type Rainbow struct {
+type Gradient struct {
     sync.RWMutex
 
     name   string
     stripe core.LEDStripe
 }
 
-func (this *Rainbow) Name() string {
+func (this *Gradient) Name() string {
     return this.name
 }
 
-func (this *Rainbow) Render(context *core.RenderContext) core.LEDStripeReader {
+func (this *Gradient) Render(context *core.RenderContext) core.LEDStripeReader {
     return this.stripe
 }
 
 func init() {
-    operations.Register("rainbow", &operations.Factory{
-        ConfigType: reflect.TypeOf(RainbowConfig{}),
+    operations.Register("gradient", &operations.Factory{
+        ConfigType: reflect.TypeOf(GradientConfig{}),
         Create: func(name string, count int, rconfig interface{}) (core.Operation, error) {
-            config := rconfig.(*RainbowConfig)
+            config := rconfig.(*GradientConfig)
 
             gradient := make(utils.GradientTable, len(config.Gradient))
             for i, e := range config.Gradient {
@@ -43,13 +43,9 @@ func init() {
             }
 
             stripe := core.NewLEDStripe(count)
-            for i := 0; i < count; i++ {
-                pos := float64(i) / float64(count-1)
-                c := gradient.GetInterpolatedColorFor(pos)
-                stripe[i].R, stripe[i].G, stripe[i].B = c.RGB255()
-            }
+            gradient.Fill(stripe)
 
-            return &Rainbow{
+            return &Gradient{
                 name:   name,
                 stripe: stripe,
             }, nil
