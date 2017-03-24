@@ -23,16 +23,16 @@ type Rotation struct {
     offset float64
 }
 
-type rotatedLEDStripeReader struct {
+type rotatedLEDStripe struct {
     source core.LEDStripeReader
     offset float64
 }
 
-func (this *rotatedLEDStripeReader) Count() int {
+func (this *rotatedLEDStripe) Count() int {
     return this.source.Count()
 }
 
-func(this *rotatedLEDStripeReader) Get(i int) (r, g, b uint8) {
+func(this *rotatedLEDStripe) Get(i int) (r, g, b uint8) {
     // TODO: Blending between colors?
     return this.source.Get((i+int(this.offset))%this.source.Count())
 }
@@ -47,7 +47,7 @@ func (this *Rotation) Render(context *core.RenderContext) core.LEDStripeReader {
     // TODO: Ouch, this hurts
     source := context.Results[this.source]
 
-    return &rotatedLEDStripeReader{
+    return &rotatedLEDStripe{
         source: source,
         offset: this.offset,
     }
