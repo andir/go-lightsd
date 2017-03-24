@@ -59,18 +59,14 @@ pipelines:
         type: raindrops
         config:
           hue_min: 0.0
-          hue_max: 1.0
-          sat_min: 0.0
+          hue_max: 360.0
+          sat_min: 1.0
           sat_max: 1.0
-          val_min: 0.0
+          val_min: 1.0
           val_max: 1.0
-          decay_min: 0.001
-          decay_max: 0.5
-          chance: 0.95
-#      - name: test
-#        type: lua
-#        config:
-#          file: example/test.lua
+          decay_min: 0.5
+          decay_max: 2.0
+          chance: 0.002
     output:
       type: shm
       source: raindrops
