@@ -8,7 +8,6 @@ import (
     "time"
     "reflect"
     "github.com/lucasb-eyer/go-colorful"
-    "fmt"
 )
 
 type RaindropConfig struct {
@@ -48,42 +47,20 @@ type Raindrop struct {
 
     rand *rand.Rand
 
-    leds []raindropLED
-
-    stripe core.LEDStripe
+    leds raindropLEDStripe
 }
 
-type raindropLED struct {
+type raindropLEDStripe []struct {
     color colorful.Color
     decay float64
 }
 
-func maxFloat64(a, b float64) float64 {
-    if a > b {
-        return a
-    } else {
-        return b
-    }
+func (this raindropLEDStripe) Count() int {
+    return len(this)
 }
 
-func minFloat64(a, b float64) float64 {
-    if a < b {
-        return a
-    } else {
-        return b
-    }
-}
-
-func randomFloat64(ra *rand.Rand, min, max float64) float64 {
-    if min == max {
-        return max
-    }
-
-    if min < max {
-        min, max = max, min
-    }
-
-    return (ra.Float64() * (max - min)) + min
+func(this raindropLEDStripe) Get(i int) (r, g, b uint8) {
+    return this[i].color.RGB255()
 }
 
 func (this *Raindrop) Name() string {
@@ -91,7 +68,7 @@ func (this *Raindrop) Name() string {
 }
 
 func (this *Raindrop) Render(context *core.RenderContext) core.LEDStripeReader {
-    for i, l := range this.leds {
+    for i := range this.leds {
         roll := randomFloat64(this.rand, 0.0, 1.0)
 
         if roll < this.Chance {
@@ -100,22 +77,17 @@ func (this *Raindrop) Render(context *core.RenderContext) core.LEDStripeReader {
             value := randomFloat64(this.rand, this.ValueMin, this.ValueMax)
             decay := randomFloat64(this.rand, this.DecayMin, this.DecayMax)
 
-            this.leds[i] = raindropLED{
-                color: colorful.Hsv(hue, saturation, value),
-                decay: decay,
-            }
+            this.leds[i].color = colorful.Hsv(hue, saturation, value)
+            this.leds[i].decay = decay
 
         } else {
-            h, s, v := l.color.Hsv()
-            v *= 1.0 - (1.0 / l.decay) * context.Duration.Seconds()
+            h, s, v := this.leds[i].color.Hsv()
+            v *= 1.0 - (1.0 / this.leds[i].decay) * context.Duration.Seconds()
             this.leds[i].color = colorful.Hsv(h, s, v)
         }
-
-        r, g, b := l.color.RGB255()
-        this.stripe.Set(i, r, g, b)
     }
 
-    return this.stripe
+    return this.leds
 }
 
 func init() {
@@ -142,10 +114,20 @@ func init() {
                 Chance: config.Chance,
 
                 rand: rand.New(rand.NewSource(time.Now().Unix())),
-                leds: make([]raindropLED, count),
-
-                stripe: core.NewLEDStripe(count),
+                leds: make(raindropLEDStripe, count),
             }, nil
         },
     })
+}
+
+func randomFloat64(ra *rand.Rand, min, max float64) float64 {
+    if min == max {
+        return max
+    }
+
+    if min < max {
+        min, max = max, min
+    }
+
+    return (ra.Float64() * (max - min)) + min
 }
