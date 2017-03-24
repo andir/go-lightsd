@@ -8,6 +8,7 @@ import (
     "time"
     "reflect"
     "github.com/lucasb-eyer/go-colorful"
+    "fmt"
 )
 
 type RaindropConfig struct {
@@ -20,8 +21,8 @@ type RaindropConfig struct {
     ValueMin float64 `mapstructure:"val_min"`
     ValueMax float64 `mapstructure:"val_max"`
 
-    DecayLow  float64 `mapstructure:"decay_low"`
-    DecayHigh float64 `mapstructure:"decay_high"`
+    DecayMin float64 `mapstructure:"decay_min"`
+    DecayMax float64 `mapstructure:"decay_max"`
 
     Chance float64 `mapstructure:"chance"`
 }
@@ -29,7 +30,7 @@ type RaindropConfig struct {
 type Raindrop struct {
     sync.RWMutex
 
-    name   string
+    name string
 
     HueMin float64 `mqtt:"hue_min"`
     HueMax float64 `mqtt:"hue_max"`
@@ -40,21 +41,21 @@ type Raindrop struct {
     ValueMin float64 `mqtt:"val_min"`
     ValueMax float64 `mqtt:"val_max"`
 
-    DecayLow  float64 `mqtt:"decay_low"`
-    DecayHigh float64 `mqtt:"decay_high"`
+    DecayMin float64 `mqtt:"decay_min"`
+    DecayMax float64 `mqtt:"decay_max"`
 
     Chance float64 `mqtt:"chance"`
 
     rand *rand.Rand
 
-    leds []RaindropLED
+    leds []raindropLED
 
     stripe core.LEDStripe
 }
 
-type RaindropLED struct {
-    Color     colorful.Color
-    DecayRate float64
+type raindropLED struct {
+    color colorful.Color
+    decay float64
 }
 
 func maxFloat64(a, b float64) float64 {
@@ -74,6 +75,14 @@ func minFloat64(a, b float64) float64 {
 }
 
 func randomFloat64(ra *rand.Rand, min, max float64) float64 {
+    if min == max {
+        return max
+    }
+
+    if min < max {
+        min, max = max, min
+    }
+
     return (ra.Float64() * (max - min)) + min
 }
 
@@ -85,23 +94,24 @@ func (this *Raindrop) Render(context *core.RenderContext) core.LEDStripeReader {
     for i, l := range this.leds {
         roll := randomFloat64(this.rand, 0.0, 1.0)
 
-        if roll > this.Chance {
-            saturation := randomFloat64(this.rand, this.SaturationMin, this.SaturationMax)
+        if roll < this.Chance {
             hue := randomFloat64(this.rand, this.HueMin, this.HueMax)
+            saturation := randomFloat64(this.rand, this.SaturationMin, this.SaturationMax)
             value := randomFloat64(this.rand, this.ValueMin, this.ValueMax)
+            decay := randomFloat64(this.rand, this.DecayMin, this.DecayMax)
 
-            decayRate := randomFloat64(this.rand, this.DecayLow, this.DecayHigh)
+            this.leds[i] = raindropLED{
+                color: colorful.Hsv(hue, saturation, value),
+                decay: decay,
+            }
 
-            l.Color = colorful.Hsv(hue, saturation, value)
-            l.DecayRate = 1.0 - decayRate
+        } else {
+            h, s, v := l.color.Hsv()
+            v *= 1.0 - (1.0 / l.decay) * context.Duration.Seconds()
+            this.leds[i].color = colorful.Hsv(h, s, v)
         }
 
-        factor := maxFloat64(minFloat64(l.DecayRate, 1.0), 0.0)
-        h, s, v := l.Color.Hsv()
-        v *= float64(factor)
-        l.Color = colorful.Hsv(h, s, v)
-
-        r, g, b := l.Color.RGB255()
+        r, g, b := l.color.RGB255()
         this.stripe.Set(i, r, g, b)
     }
 
@@ -115,7 +125,7 @@ func init() {
             config := rconfig.(*RaindropConfig)
 
             return &Raindrop{
-                name:   name,
+                name: name,
 
                 HueMin: config.HueMin,
                 HueMax: config.HueMax,
@@ -126,13 +136,13 @@ func init() {
                 ValueMin: config.ValueMin,
                 ValueMax: config.ValueMax,
 
-                DecayLow:  config.DecayLow,
-                DecayHigh: config.DecayHigh,
+                DecayMin: config.DecayMin,
+                DecayMax: config.DecayMax,
 
                 Chance: config.Chance,
 
                 rand: rand.New(rand.NewSource(time.Now().Unix())),
-                leds: make([]RaindropLED, count),
+                leds: make([]raindropLED, count),
 
                 stripe: core.NewLEDStripe(count),
             }, nil
