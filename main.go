@@ -11,6 +11,8 @@ import (
     _ "github.com/andir/lightsd/operations/raindrop"
     _ "github.com/andir/lightsd/operations/rotation"
     _ "github.com/andir/lightsd/operations/blackout"
+    _ "github.com/andir/lightsd/operations/dimmer"
+    _ "github.com/andir/lightsd/operations/adjustment"
     _ "github.com/andir/lightsd/outputs/shm"
     "github.com/andir/lightsd/operations"
     "github.com/andir/lightsd/outputs"

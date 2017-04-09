@@ -100,7 +100,8 @@ func (this *Debugger) Broadcast(context *core.RenderContext) {
     msg := make([]byte, context.Count()*3)
 
     for i := 0; i < context.Count(); i++ {
-        msg[i*3+0], msg[i*3+1], msg[i*3+2] = context.Results[context.Pipeline.Output.Source()].Get(i)
+        c := context.Results[context.Pipeline.Output.Source()].Get(i)
+        msg[i*3+0], msg[i*3+1], msg[i*3+2] = c.RGB255()
     }
 
     this.broadcasters[context.Pipeline.Name].Broadcast(msg)

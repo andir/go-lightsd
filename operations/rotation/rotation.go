@@ -32,7 +32,7 @@ func (this *rotatedLEDStripe) Count() int {
     return this.source.Count()
 }
 
-func(this *rotatedLEDStripe) Get(i int) (r, g, b uint8) {
+func(this *rotatedLEDStripe) Get(i int) core.LED {
     // TODO: Blending between colors?
     return this.source.Get((i+int(this.offset))%this.source.Count())
 }

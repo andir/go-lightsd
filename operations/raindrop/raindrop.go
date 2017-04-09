@@ -51,7 +51,7 @@ type Raindrop struct {
 }
 
 type raindropLEDStripe []struct {
-    color colorful.Color
+    color core.LED
     decay float64
 }
 
@@ -59,8 +59,8 @@ func (this raindropLEDStripe) Count() int {
     return len(this)
 }
 
-func(this raindropLEDStripe) Get(i int) (r, g, b uint8) {
-    return this[i].color.RGB255()
+func (this raindropLEDStripe) Get(i int) core.LED {
+    return this[i].color
 }
 
 func (this *Raindrop) Name() string {
@@ -77,13 +77,17 @@ func (this *Raindrop) Render(context *core.RenderContext) core.LEDStripeReader {
             value := randomFloat64(this.rand, this.ValueMin, this.ValueMax)
             decay := randomFloat64(this.rand, this.DecayMin, this.DecayMax)
 
-            this.leds[i].color = colorful.Hsv(hue, saturation, value)
+            color := colorful.Hsv(hue, saturation, value)
+
+            this.leds[i].color = core.LED{R: color.R, G: color.G, B: color.B}
             this.leds[i].decay = decay
 
         } else {
-            h, s, v := this.leds[i].color.Hsv()
-            v *= 1.0 - (1.0 / this.leds[i].decay) * context.Duration.Seconds()
-            this.leds[i].color = colorful.Hsv(h, s, v)
+            v := 1.0 - (1.0/this.leds[i].decay)*context.Duration.Seconds()
+
+            this.leds[i].color.R *= v
+            this.leds[i].color.G *= v
+            this.leds[i].color.B *= v
         }
     }
 

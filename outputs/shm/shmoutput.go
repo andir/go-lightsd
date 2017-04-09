@@ -82,8 +82,10 @@ func (m *SHMOutput) Render(stripe core.LEDStripeReader) {
     n := minInt(stripe.Count(), m.size)
 
     for i := 0; i < n; i++ {
+        // TODO: Add temporal dithering (see https://github.com/FastLED/FastLED/wiki/FastLED-Temporal-Dithering)
+        // TODO: Make this available for other outputs, too
         map_array[i*4+0] = byte(0)
-        map_array[i*4+1], map_array[i*4+2], map_array[i*4+3] = stripe.Get(i)
+        map_array[i*4+1], map_array[i*4+2], map_array[i*4+3] = stripe.Get(i).RGB255()
     }
 }
 

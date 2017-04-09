@@ -2,7 +2,6 @@ package utils
 
 import (
     "github.com/lucasb-eyer/go-colorful"
-    "github.com/andir/lightsd/core"
 )
 
 // This table contains the "keypoints" of the colorgradient you want to generate.
@@ -27,13 +26,4 @@ func (self GradientTable) GetInterpolatedColorFor(t float64) colorful.Color {
     }
     // Nothing found? Means we're at (or past) the last gradient keypoint.
     return self[len(self)-1].Col
-}
-
-func (self GradientTable) Fill(stripe core.LEDStripe) {
-    for i := 0; i < stripe.Count(); i++ {
-        pos := float64(i) / float64(stripe.Count()-1)
-
-        r, g, b := self.GetInterpolatedColorFor(pos).RGB255()
-        stripe.Set(i, r, g, b, )
-    }
 }

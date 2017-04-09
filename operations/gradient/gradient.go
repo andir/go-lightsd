@@ -12,9 +12,9 @@ import (
 
 type GradientConfig struct {
     Gradient []struct {
-        C string
-        P float64
-    }
+        C string `mapstructure:"c"`
+        P float64 `mapstructure:"p"`
+    } `mapstructure:"gradient"`
 }
 
 type Gradient struct {
@@ -50,7 +50,10 @@ func init() {
             }
 
             stripe := core.NewLEDStripe(count)
-            gradient.Fill(stripe)
+            for i := 0; i < stripe.Count(); i++ {
+                c := gradient.GetInterpolatedColorFor(float64(i) / float64(stripe.Count()-1))
+                stripe.Set(i, core.LED{R: c.R, G: c.G, B: c.B})
+            }
 
             return &Gradient{
                 name:   name,

@@ -40,10 +40,21 @@ pipelines:
         config:
           speed: 30.0
           source: rainbow
+      - name: adjustment
+        type: adjustment
+        config:
+          source: rotation
+          correction: '#FFB0F0' # Typical value for SMD5050 LEDs
+          temperature: '#FFFFFB' # 5400 K
+      - name: dimmer
+        type: dimmer
+        config:
+          source: adjustment
+          value: 0.5
       - name: blackout
         type: blackout
         config:
-          source: rotation
+          source: dimmer
           from: 500
           to: 100
     output:

@@ -10,9 +10,9 @@ import (
 type BlackoutConfig struct {
     Source string `mapstructure:"source"`
 
-    Enabled bool
-    From    int
-    To      int
+    Enabled bool `mapstructure:"enable"`
+    From    int `mapstructure:"from"`
+    To      int `mapstructure:"to"`
 }
 
 type Blackout struct {
@@ -41,9 +41,9 @@ func (this *blackoutLEDStripeReader) Count() int {
     return this.source.Count()
 }
 
-func (this *blackoutLEDStripeReader) Get(i int) (r, g, b uint8) {
+func (this *blackoutLEDStripeReader) Get(i int) core.LED {
     if this.enabled && ((this.from <= i && i <= this.to) == this.invert) {
-        return 0.0, 0.0, 0.0
+        return core.LED{R: 0.0, G: 0.0, B: 0.0}
     }
 
     return this.source.Get(i)
