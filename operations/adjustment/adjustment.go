@@ -31,10 +31,6 @@ type adjustingLEDStripeReader struct {
     adjustment struct{ R, G, B float64 }
 }
 
-func (this *adjustingLEDStripeReader) Count() int {
-    return this.source.Count()
-}
-
 func (this *adjustingLEDStripeReader) Get(i int) core.LED {
     c := this.source.Get(i)
 

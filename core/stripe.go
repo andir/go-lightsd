@@ -21,12 +21,7 @@ func NewLEDStripe(count int) LEDStripe {
 }
 
 type LEDStripeReader interface {
-    Count() int
     Get(i int) LED
-}
-
-func (this LEDStripe) Count() int {
-    return len(this)
 }
 
 func (this LEDStripe) Get(i int) LED {

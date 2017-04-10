@@ -28,10 +28,6 @@ type dimmerLEDStripeReader struct {
     value  float64
 }
 
-func (this *dimmerLEDStripeReader) Count() int {
-    return this.source.Count()
-}
-
 func (this *dimmerLEDStripeReader) Get(i int) core.LED {
     c := this.source.Get(i)
 

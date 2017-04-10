@@ -42,7 +42,7 @@ func init() {
             for i, e := range config.Gradient {
                 color, err := colorful.Hex(e.C)
                 if err != nil {
-                    return nil, fmt.Errorf("gradient: failed to parse color: %v", err)
+                    return nil, fmt.Errorf("gradient: failed to parse color: %v: %v", e.C, err)
                 }
 
                 gradient[i].Col = color
@@ -50,8 +50,8 @@ func init() {
             }
 
             stripe := core.NewLEDStripe(count)
-            for i := 0; i < stripe.Count(); i++ {
-                c := gradient.GetInterpolatedColorFor(float64(i) / float64(stripe.Count()-1))
+            for i := 0; i < count; i++ {
+                c := gradient.GetInterpolatedColorFor(float64(i) / float64(count-1))
                 stripe.Set(i, core.LED{R: c.R, G: c.G, B: c.B})
             }
 

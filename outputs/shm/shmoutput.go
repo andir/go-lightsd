@@ -79,9 +79,8 @@ func minInt(a, b int) int {
 
 func (m *SHMOutput) Render(stripe core.LEDStripeReader) {
     map_array := (*[1 << 30]uint8)(unsafe.Pointer(&m.mmap[0]))[:m.size:m.size]
-    n := minInt(stripe.Count(), m.size)
 
-    for i := 0; i < n; i++ {
+    for i := 0; i < m.size/4; i++ {
         // TODO: Add temporal dithering (see https://github.com/FastLED/FastLED/wiki/FastLED-Temporal-Dithering)
         // TODO: Make this available for other outputs, too
         map_array[i*4+0] = byte(0)

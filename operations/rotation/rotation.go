@@ -21,20 +21,18 @@ type Rotation struct {
     PixelPerSecond float64  `mqtt:"speed"`
 
     offset float64
+    count  int
 }
 
 type rotatedLEDStripe struct {
     source core.LEDStripeReader
     offset float64
+    count  int
 }
 
-func (this *rotatedLEDStripe) Count() int {
-    return this.source.Count()
-}
-
-func(this *rotatedLEDStripe) Get(i int) core.LED {
+func (this *rotatedLEDStripe) Get(i int) core.LED {
     // TODO: Blending between colors?
-    return this.source.Get((i+int(this.offset))%this.source.Count())
+    return this.source.Get((i + int(this.offset)) % this.count)
 }
 
 func (this *Rotation) Name() string {
@@ -50,6 +48,7 @@ func (this *Rotation) Render(context *core.RenderContext) core.LEDStripeReader {
     return &rotatedLEDStripe{
         source: source,
         offset: this.offset,
+        count:  this.count,
     }
 }
 
@@ -66,6 +65,7 @@ func init() {
                 PixelPerSecond: config.PixelPerSecond,
 
                 offset: 0.0,
+                count:  count,
             }, nil
         },
     })

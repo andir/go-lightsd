@@ -75,7 +75,8 @@ func (this *Raindrop) Render(context *core.RenderContext) core.LEDStripeReader {
             hue := randomFloat64(this.rand, this.HueMin, this.HueMax)
             saturation := randomFloat64(this.rand, this.SaturationMin, this.SaturationMax)
             value := randomFloat64(this.rand, this.ValueMin, this.ValueMax)
-            decay := randomFloat64(this.rand, this.DecayMin, this.DecayMax)
+
+            decay := 1.0 / randomFloat64(this.rand, this.DecayMin, this.DecayMax)
 
             color := colorful.Hsv(hue, saturation, value)
 
@@ -83,7 +84,7 @@ func (this *Raindrop) Render(context *core.RenderContext) core.LEDStripeReader {
             this.leds[i].decay = decay
 
         } else {
-            v := 1.0 - (1.0/this.leds[i].decay)*context.Duration.Seconds()
+            v := 1.0 - this.leds[i].decay*context.Duration.Seconds()
 
             this.leds[i].color.R *= v
             this.leds[i].color.G *= v

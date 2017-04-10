@@ -40,17 +40,36 @@ pipelines:
         config:
           speed: 30.0
           source: rainbow
+      - name: raindrops
+        type: raindrops
+        config:
+          hue_min: 0.0
+          hue_max: 360.0
+          sat_min: 1.0
+          sat_max: 1.0
+          val_min: 1.0
+          val_max: 1.0
+          decay_min: 0.5
+          decay_max: 2.0
+          chance: 0.002
+      - name: mixer
+        type: mixer
+        config:
+          source1: rotation
+          source2: raindrops
+          mode: multiply
+          speed: 0.5
       - name: adjustment
         type: adjustment
         config:
-          source: rotation
+          source: mixer
           correction: '#FFB0F0' # Typical value for SMD5050 LEDs
           temperature: '#FFFFFB' # 5400 K
       - name: dimmer
         type: dimmer
         config:
           source: adjustment
-          value: 0.5
+          value: 1.0
       - name: blackout
         type: blackout
         config:

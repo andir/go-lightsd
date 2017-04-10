@@ -37,10 +37,6 @@ type blackoutLEDStripeReader struct {
     invert  bool
 }
 
-func (this *blackoutLEDStripeReader) Count() int {
-    return this.source.Count()
-}
-
 func (this *blackoutLEDStripeReader) Get(i int) core.LED {
     if this.enabled && ((this.from <= i && i <= this.to) == this.invert) {
         return core.LED{R: 0.0, G: 0.0, B: 0.0}
