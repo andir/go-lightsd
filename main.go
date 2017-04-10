@@ -15,6 +15,7 @@ import (
     _ "github.com/andir/lightsd/operations/adjustment"
     _ "github.com/andir/lightsd/operations/mixer"
     _ "github.com/andir/lightsd/outputs/shm"
+    _ "github.com/andir/lightsd/outputs/dmx"
     "github.com/andir/lightsd/operations"
     "github.com/andir/lightsd/outputs"
     "github.com/andir/lightsd/debug"

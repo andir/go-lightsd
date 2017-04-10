@@ -20,7 +20,7 @@ type SHMOutput struct {
     source   string
     fh       *os.File
     mmap     []byte
-    size     int
+    count    int
     filename string
 }
 
@@ -40,25 +40,23 @@ func destroySHMOutput(s *SHMOutput) {
 }
 
 func newSHMOutput(filename string, source string, count int) (*SHMOutput, error) {
-    size := count * 4
-
     map_file, err := shm.Open(filename, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
     if err != nil {
         return nil, err
     }
 
-    if err := map_file.Truncate(int64(size)); err != nil {
+    if err := map_file.Truncate(int64(count * 4)); err != nil {
         return nil, err
     }
 
-    mmap, err := syscall.Mmap(int(map_file.Fd()), 0, int(size), syscall.PROT_READ|syscall.PROT_WRITE, syscall.MAP_SHARED)
+    mmap, err := syscall.Mmap(int(map_file.Fd()), 0, int(count * 4), syscall.PROT_READ|syscall.PROT_WRITE, syscall.MAP_SHARED)
     if err != nil {
         return nil, err
     }
 
     shm := &SHMOutput{
         source:   source,
-        size:     size,
+        count:    count,
         fh:       map_file,
         mmap:     mmap,
         filename: filename,
@@ -69,20 +67,13 @@ func newSHMOutput(filename string, source string, count int) (*SHMOutput, error)
     return shm, nil
 }
 
-func minInt(a, b int) int {
-    if a < b {
-        return a
-    } else {
-        return b
-    }
-}
-
 func (m *SHMOutput) Render(stripe core.LEDStripeReader) {
-    map_array := (*[1 << 30]uint8)(unsafe.Pointer(&m.mmap[0]))[:m.size:m.size]
+    map_array := (*[1 << 30]uint8)(unsafe.Pointer(&m.mmap[0]))[:m.count*4:m.count*4]
 
-    for i := 0; i < m.size/4; i++ {
-        // TODO: Add temporal dithering (see https://github.com/FastLED/FastLED/wiki/FastLED-Temporal-Dithering)
-        // TODO: Make this available for other outputs, too
+    // TODO: Add temporal dithering (see https://github.com/FastLED/FastLED/wiki/FastLED-Temporal-Dithering)
+    // TODO: Make this available for other outputs, too
+
+    for i := 0; i < m.count; i++ {
         map_array[i*4+0] = byte(0)
         map_array[i*4+1], map_array[i*4+2], map_array[i*4+3] = stripe.Get(i).RGB255()
     }
