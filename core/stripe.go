@@ -7,9 +7,9 @@ type LED struct {
 }
 
 func (this LED) RGB255() (r, g, b byte) {
-    return byte(utils.Clamp(this.R, 0.0, 1.0) * 255),
-        byte(utils.Clamp(this.G, 0.0, 1.0) * 255),
-        byte(utils.Clamp(this.B, 0.0, 1.0) * 255)
+    return byte(utils.ClampFloat64(this.R, 0.0, 1.0) * 255),
+        byte(utils.ClampFloat64(this.G, 0.0, 1.0) * 255),
+        byte(utils.ClampFloat64(this.B, 0.0, 1.0) * 255)
 }
 
 type LEDStripe []LED

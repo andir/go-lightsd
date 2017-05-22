@@ -62,7 +62,7 @@ func (this *Mixer) Render(context *core.RenderContext) core.LEDStripeReader {
     source1 := context.Results[this.source1]
     source2 := context.Results[this.source2]
 
-    this.blend += (utils.Clamp(this.Target, -1.0, 1.0) - this.blend) * context.Duration.Seconds() * this.speed
+    this.blend += (utils.ClampFloat64(this.Target, -1.0, 1.0) - this.blend) * context.Duration.Seconds() * this.speed
 
     return &blendingLEDStripeReader{
         source1: source1,

@@ -8,6 +8,7 @@ import (
     "time"
     "reflect"
     "github.com/lucasb-eyer/go-colorful"
+    "github.com/andir/lightsd/utils"
 )
 
 type RaindropConfig struct {
@@ -69,14 +70,14 @@ func (this *Raindrop) Name() string {
 
 func (this *Raindrop) Render(context *core.RenderContext) core.LEDStripeReader {
     for i := range this.leds {
-        roll := randomFloat64(this.rand, 0.0, 1.0)
+        roll := utils.RandomFloat64(this.rand, 0.0, 1.0)
 
         if roll < this.Chance {
-            hue := randomFloat64(this.rand, this.HueMin, this.HueMax)
-            saturation := randomFloat64(this.rand, this.SaturationMin, this.SaturationMax)
-            value := randomFloat64(this.rand, this.ValueMin, this.ValueMax)
+            hue := utils.RandomFloat64(this.rand, this.HueMin, this.HueMax)
+            saturation := utils.RandomFloat64(this.rand, this.SaturationMin, this.SaturationMax)
+            value := utils.RandomFloat64(this.rand, this.ValueMin, this.ValueMax)
 
-            decay := 1.0 / randomFloat64(this.rand, this.DecayMin, this.DecayMax)
+            decay := 1.0 / utils.RandomFloat64(this.rand, this.DecayMin, this.DecayMax)
 
             color := colorful.Hsv(hue, saturation, value)
 
@@ -123,16 +124,4 @@ func init() {
             }, nil
         },
     })
-}
-
-func randomFloat64(ra *rand.Rand, min, max float64) float64 {
-    if min == max {
-        return max
-    }
-
-    if min < max {
-        min, max = max, min
-    }
-
-    return (ra.Float64() * (max - min)) + min
 }
