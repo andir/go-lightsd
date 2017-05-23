@@ -4,21 +4,21 @@
 [submodule "vendor/github.com/lucasb-eyer/go-colorful"]
 	path = vendor/github.com/lucasb-eyer/go-colorful
 	url = https://github.com/lucasb-eyer/go-colorful
-[submodule "vendor/github.com/sbinet/go-python"]
-	path = vendor/github.com/sbinet/go-python
-	url = https://github.com/sbinet/go-python
 [submodule "vendor/github.com/eclipse/paho.mqtt.golang"]
 	path = vendor/github.com/eclipse/paho.mqtt.golang
 	url = https://github.com/eclipse/paho.mqtt.golang
 [submodule "vendor/github.com/mitchellh/mapstructure"]
 	path = vendor/github.com/mitchellh/mapstructure
 	url = https://github.com/mitchellh/mapstructure
-[submodule "vendor/github.com/yuin/gopher-lua"]
-	path = vendor/github.com/yuin/gopher-lua
-	url = https://github.com/yuin/gopher-lua
 [submodule "vendor/golang.org/x/net"]
 	path = vendor/golang.org/x/net
 	url = https://go.googlesource.com/net
 [submodule "vendor/gopkg.in/yaml.v2"]
 	path = vendor/gopkg.in/yaml.v2
 	url = https://gopkg.in/yaml.v2
+[submodule "vendor/github.com/cstockton/go-conv"]
+	path = vendor/github.com/cstockton/go-conv
+	url = https://github.com/fooker/go-conv.git
+[submodule "vendor/github.com/mesilliac/pulse-simple"]
+	path = vendor/github.com/mesilliac/pulse-simple
+	url = https://github.com/mesilliac/pulse-simple.git
