@@ -1,5 +1,7 @@
 package debug
 
+//go:generate go-bindata -pkg $GOPACKAGE -o templates.go templates/
+
 import (
     "github.com/andir/lightsd/core"
     "net/http"
@@ -16,7 +18,7 @@ type Debugger struct {
 }
 
 func (this *Debugger) createIndexHandler() http.Handler {
-    template := template.Must(template.ParseFiles("debug/templates/index.html"))
+    template := template.Must(template.New("index.html").Parse(string(MustAsset("templates/index.html"))))
 
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
         err := template.Execute(w, this.pipelines)
@@ -27,7 +29,7 @@ func (this *Debugger) createIndexHandler() http.Handler {
 }
 
 func (this *Debugger) createPipelineHandler() http.Handler {
-    template := template.Must(template.ParseFiles("debug/templates/pipeline.html"))
+    template := template.Must(template.New("pipeline.html").Parse(string(MustAsset("templates/pipeline.html"))))
 
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
         name := r.URL.Path

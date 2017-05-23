@@ -10,6 +10,7 @@ addons:
 
 install:
   - go get github.com/kovetskiy/manul
+  - go get github.com/jteeuwen/go-bindata
   - manul -Q
 
-script: go build
+script: go generate -x ./... & go build -x

@@ -1,3 +1,9 @@
+# Resulting binary
 /lightsd
 
+# IDE
 /.idea
+
+# Generated files
+/debug/templates.go
+
