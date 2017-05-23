@@ -6,12 +6,12 @@ import (
     "reflect"
     "log"
     "fmt"
-    "strconv"
+    conv "github.com/cstockton/go-conv" // TODO: Wait for merge in upstream
 )
 
 type MqttConnection struct {
     client MQTT.Client
-    realm string
+    realm  string
 }
 
 func NewMqttConnection(config *Config) (*MqttConnection, error) {
@@ -27,7 +27,7 @@ func NewMqttConnection(config *Config) (*MqttConnection, error) {
 
     return &MqttConnection{
         client: client,
-        realm: config.MQTT.Realm,
+        realm:  config.MQTT.Realm,
     }, nil
 }
 
@@ -45,68 +45,40 @@ func (this *MqttConnection) Register(pipeline *core.Pipeline) error {
                 continue
             }
 
-            topic := fmt.Sprintf("%s/%s/%s/%s/set", this.realm, pipeline.Name, operation.Name(), tag)
+            topic := fmt.Sprintf("%s/%s/%s/%s", this.realm, pipeline.Name, operation.Name(), tag)
 
-            var parse func(s string) (reflect.Value, error)
-
-            switch k := fieldType.Type.Kind(); k {
-            case reflect.Float64:
-                parse = func(s string) (reflect.Value, error) {
-                    val, err := strconv.ParseFloat(s, 64)
-                    if err != nil {
-                        return reflect.ValueOf(nil), err
-                    }
-
-                    return reflect.ValueOf(val), nil
-                }
-
-            case reflect.Int:
-                parse = func(s string) (reflect.Value, error) {
-                    val, err := strconv.ParseInt(s, 10, 64)
-                    if err != nil {
-                        return reflect.ValueOf(nil), err
-                    }
-
-                    return reflect.ValueOf(val), nil
-                }
-
-            case reflect.Bool:
-                parse = func(s string) (reflect.Value, error) {
-                    val, err := strconv.ParseBool(s)
-                    if err != nil {
-                        return reflect.ValueOf(nil), err
-                    }
-
-                    return reflect.ValueOf(val), nil
-                }
-
-            case reflect.String:
-                parse = func(s string) (reflect.Value, error) {
-                    return reflect.ValueOf(s), nil
-                }
-
-            default:
-                log.Panic("Unsupported type:", k)
-            }
-
-            log.Printf("Found MQTT exported parameter: %s:%s(%s) as %s", t.Name(), fieldType.Name, fieldType.Type.Name(), topic)
+            log.Printf("Found MQTT exported parameter: %s:%s(%s) as %s/set", t.Name(), fieldType.Name, fieldType.Type.Name(), topic)
 
             handler := func(c MQTT.Client, m MQTT.Message) {
-                val, err := parse(string(m.Payload()))
+                msg := string(m.Payload())
+
+                // Lock the operation for changes
+
+                // Parse the messages to a value
+                value, err := conv.Value(fieldType.Type, msg)
                 if err != nil {
-                    log.Printf("Failed to parse: %s: %v", m.Payload(), err)
+                    log.Printf("Failed to parse: %s: %v", msg, err)
                     return
                 }
 
-                log.Printf("Setting fieldValue: %s:%s(%s) = %v", t.Name(), fieldType.Name, fieldType.Type.Name(), val)
+                // Change the value white the operation is locked
+                go func() {
+                    operation.Lock()
+                    defer operation.Unlock()
 
-                operation.Lock()
-                defer operation.Unlock()
-                fieldValue.Set(val)
+                    fieldValue.Set(reflect.ValueOf(value))
+                }()
 
+                // Publish the updated value
+                if t := this.client.Publish(topic, 0, false, msg); t.Wait() && t.Error() != nil {
+                    log.Printf("Failed to publish: %s=%s: %v", topic, msg, t.Error())
+                    return
+                }
+
+                log.Printf("Changed exported msg: %s:%s(%s) = %v", t.Name(), fieldType.Name, fieldType.Type.Name(), msg)
             }
 
-            if t := this.client.Subscribe(topic, 0, handler); t.Wait() && t.Error() != nil {
+            if t := this.client.Subscribe(fmt.Sprintf("%s/set", topic), 0, handler); t.Wait() && t.Error() != nil {
                 return t.Error()
             }
         }
