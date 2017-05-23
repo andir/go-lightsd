@@ -52,22 +52,17 @@ func (this *MqttConnection) Register(pipeline *core.Pipeline) error {
             handler := func(c MQTT.Client, m MQTT.Message) {
                 msg := string(m.Payload())
 
-                // Lock the operation for changes
-
-                // Parse the messages to a value
-                value, err := conv.Value(fieldType.Type, msg)
-                if err != nil {
-                    log.Printf("Failed to parse: %s: %v", msg, err)
-                    return
-                }
-
-                // Change the value white the operation is locked
-                go func() {
+                // Lock the operation for changes, parse the message into the field
+                {
                     operation.Lock()
                     defer operation.Unlock()
 
-                    fieldValue.Set(reflect.ValueOf(value))
-                }()
+                    // Parse the messages to a value
+                    if err := conv.Infer(fieldValue, msg); err != nil {
+                        log.Printf("Failed to parse: %s: %v", msg, err)
+                        return
+                    }
+                }
 
                 // Publish the updated value
                 if t := this.client.Publish(topic, 0, false, msg); t.Wait() && t.Error() != nil {
@@ -75,7 +70,7 @@ func (this *MqttConnection) Register(pipeline *core.Pipeline) error {
                     return
                 }
 
-                log.Printf("Changed exported msg: %s:%s(%s) = %v", t.Name(), fieldType.Name, fieldType.Type.Name(), msg)
+                log.Printf("Changed exported parameter: %s:%s(%s) = %v", t.Name(), fieldType.Name, fieldType.Type.Name(), msg)
             }
 
             if t := this.client.Subscribe(fmt.Sprintf("%s/set", topic), 0, handler); t.Wait() && t.Error() != nil {
