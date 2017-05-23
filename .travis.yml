@@ -3,6 +3,11 @@ go:
   - 1.7.x
   - master
 
+addons:
+  apt:
+    packages:
+      - libftdi-dev
+
 install:
   - go get github.com/kovetskiy/manul
   - manul -Q
