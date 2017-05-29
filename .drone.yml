@@ -1,0 +1,32 @@
+clone:
+  git:
+    image: plugins/git
+    recursive: true
+
+workspace:
+  base: /go
+  path: src/github.com/andir/lightsd
+
+pipeline:
+  generate:
+    image: golang:1.8
+    commands:
+      - go get github.com/jteeuwen/go-bindata/...
+      - go generate ./debug
+
+  build:
+    image: golang:1.8
+    commands:
+      - apt update && apt install -y libftdi-dev
+      - go build
+
+  deploy:
+    image: drillster/drone-rsync
+    hosts:
+      - eddie.maglab.space
+    user: deploy
+    source: ./lightsd
+    target: /opt/lightsd
+    when:
+      branch: master
+
