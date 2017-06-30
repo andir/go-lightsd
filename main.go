@@ -108,7 +108,12 @@ func main() {
                 }
 
                 // Wait until next frame should start
-                time.Sleep(lastTime.Add(interval).Sub(time.Now()))
+                sleep := currTime.Add(interval).Sub(time.Now())
+                if sleep > 0 {
+                    time.Sleep(sleep)
+                } else {
+                    log.Printf("Frame took too long: %d ms", (interval - sleep) / time.Millisecond)
+                }
 
                 lastTime = currTime
             }
