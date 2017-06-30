@@ -73,10 +73,8 @@ func (this *Colorbeat) Render(context *core.RenderContext) core.LEDStripeReader 
             this.leds[i].hueSpeed = RandomInverse(this.rand, utils.RandomFloat64(this.rand, this.SpeedMin, this.SpeedMax))
 
         } else {
-            this.leds[i].peak -= this.PeakDecay * context.Duration.Seconds()
-            this.leds[i].peak = math.Max(0.0, this.leds[i].peak)
-
-            this.leds[i].hueValue += this.leds[i].hueSpeed * this.Speed * context.Duration.Seconds()
+            this.leds[i].peak = math.Max(this.leds[i].peak - (this.PeakDecay * context.Duration.Seconds()), 0.0)
+            this.leds[i].hueValue = math.Mod(this.leds[i].hueValue + (this.leds[i].hueSpeed * this.Speed * context.Duration.Seconds()), 360.0)
         }
     }
 
@@ -88,8 +86,6 @@ func init() {
         ConfigType: reflect.TypeOf(ColorbeatConfig{}),
         Create: func(name string, count int, rconfig interface{}) (core.Operation, error) {
             config := rconfig.(*ColorbeatConfig)
-
-            println(config.PeakThreshold)
 
             return &Colorbeat{
                 name:   name,
