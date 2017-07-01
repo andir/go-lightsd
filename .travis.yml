@@ -13,4 +13,4 @@ install:
   - go get github.com/jteeuwen/go-bindata
   - manul -Q
 
-script: go generate -x ./... & go build -x
+script: go generate -x debug/debugger.go & go build -x

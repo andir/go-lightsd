@@ -94,7 +94,7 @@ func main() {
 
     for _, pipeline := range pipelines {
         go func(pipeline *core.Pipeline) {
-            interval := time.Second / time.Duration(config.FPS)
+            interval := time.Duration(1000000000.0 / float64(config.FPS))
             lastTime := time.Now()
 
             for {
